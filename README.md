@@ -10,7 +10,7 @@
 
 ---
 
-Playora is a full-stack ERP built exclusively for sports clubs — court booking, memberships, a bar & cafeteria POS with a live kitchen display, pro shop, complete finance (invoices, payables, GST), HR (rota, attendance, leave, payroll), a WhatsApp & voice booking AI agent, and a plain-English analytics console for the owner.
+Playora is a full-stack ERP built exclusively for sports clubs — court booking, memberships, a bar & cafeteria POS with a live kitchen display, pro shop, complete finance (invoices, payables, GST), HR (rota, attendance, leave, payroll), and a plain-English analytics console for the owner.
 
 Built for **The Champions Club** (demo tenant), but **multi-tenant by design** — every row carries a `clubId`.
 
@@ -20,7 +20,7 @@ Built for **The Champions Club** (demo tenant), but **multi-tenant by design** �
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│          MEMBER / GUEST (Browser · WhatsApp · Voice)            │
+│          MEMBER / GUEST (Browser)                               │
 └──────────────────────────┬──────────────────────────────────────┘
                            │
                            ▼
@@ -35,12 +35,12 @@ Built for **The Champions Club** (demo tenant), but **multi-tenant by design** �
           ▼                ▼                ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐
 │ LIB/KERNEL   │  │  AI LAYER    │  │  INTEGRATION LAYER       │
-│ • Ledger     │  │ • Ask AI     │  │  • Twilio WhatsApp Agent  │
-│ • Stock Mvmt │  │   NL→SQL     │  │  • Vapi Voice Agent       │
-│ • Doc Nums   │  │   (Groq LLM) │  │  • Nodemailer (Gmail)     │
-│ • Activity   │  │ • Booking    │  │  • Twilio SMS             │
-│   Log        │  │   Agent      │  └──────────────────────────┘
-└──────┬───────┘  └──────────────┘
+│ • Ledger     │  │ • Ask AI     │  │  • Nodemailer (Gmail)    │
+│ • Stock Mvmt │  │   NL→SQL     │  └──────────────────────────┘
+│ • Doc Nums   │  │   (Groq LLM) │  
+│ • Activity   │  └──────────────┘  
+│   Log        │                    
+└──────┬───────┘                    
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────┐
@@ -83,8 +83,6 @@ Rota builder, QR clock-in/out attendance, leave approvals workflow, payroll gene
 ### 🤖 Ask Playora (AI Analytics)
 Owner types a plain-English question → Groq LLM generates a guarded, read-only SQL query → live result + chart. Common questions have offline fallback "canned plans" so the AI answers even without a live API key.
 
-### 📱 WhatsApp & Voice Agent
-Members can book or check court availability over **WhatsApp** (Twilio) or the embedded **voice widget** (Vapi). Both channels share identical server-side AI tools.
 
 ---
 
@@ -100,7 +98,6 @@ Members can book or check court availability over **WhatsApp** (Twilio) or the e
 | **Pro shop** | `/shop-pos`, `/shop-pos/orders`, `/me/shop` | Counter & online sales, stock reservations, service jobs |
 | **Finance** | `/owner/finance`, `/owner/invoices`, `/owner/tax` | Revenue heatmap, GST report, CSV export, shareable token links |
 | **HR** | `/owner/hr`, `/owner/hr/leave`, `/owner/hr/payroll` | Rota, clock-in/out, leave approvals, payroll → payslip PDF |
-| **AI Agents** | `/api/webhooks/twilio`, `/api/vapi/tools` | WhatsApp & voice booking via shared AI tools |
 | **Ask AI** | `/owner/ask` | Natural language → guarded read-only SQL → answer + chart |
 
 ---
@@ -172,8 +169,7 @@ Members can book or check court availability over **WhatsApp** (Twilio) or the e
 | **UI Components** | shadcn/ui (base-nova) + Lucide icons |
 | **Charts** | Recharts |
 | **AI / LLM** | Groq API (qwen3.8-27b) |
-| **Voice Agent** | Vapi |
-| **Notifications** | Twilio WhatsApp · Nodemailer (Gmail) |
+| **Notifications** | Nodemailer (Gmail) |
 
 > Money is stored as **integer paise** (`lib/money.ts`). Club-local time is handled in `lib/time.ts`.
 
@@ -217,11 +213,6 @@ GROQ_API_KEY="gsk_..."
 # Optional — email notifications
 GMAIL_USER="your@gmail.com"
 GMAIL_APP_PASSWORD="your-app-password"
-
-# Optional — WhatsApp & voice agents (disabled by default)
-TWILIO_ACCOUNT_SID="AC..."
-TWILIO_AUTH_TOKEN="..."
-TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
 ```
 
 ### 4. Migrate, Seed & Run
@@ -292,7 +283,7 @@ app/
   (auth)/      login, register, forgot-password
   (member)/    /me/* — member app (booking, shop, tab, profile)
   (staff)/     /desk /bar /shop-pos /owner /coach
-  api/         twilio + vapi webhooks, cron jobs
+  api/         cron jobs
   print/       invoice, payslip, quote print views
 
 components/    per-module UI (booking, bar, shop, owner, members, hr, shared)
@@ -304,7 +295,7 @@ lib/
   shop/        shop engine + queries
   finance/     finance engine + queries
   hr/           HR engine + queries
-  agent/       shared AI booking tools + WhatsApp runner
+  agent/       shared AI booking tools
   ask/         natural language → SQL engine + guard
   actions/     server actions (thin, role-checked wrappers)
 
@@ -319,21 +310,16 @@ public/        images, product photos, logos
 
 | Service | Purpose | Enabled By |
 |---|---|---|
-| **Twilio WhatsApp** | AI booking agent via WhatsApp | `WHATSAPP_ENABLED=true` + creds |
-| **Vapi** | Voice booking agent (web widget) | `VAPI_ENABLED=true` + key |
 | **Nodemailer** | Email notifications | `GMAIL_USER` + `GMAIL_APP_PASSWORD` |
 | **Groq API** | Ask Playora LLM (NL→SQL) | `GROQ_API_KEY` |
 
-> **Dev safety:** `WHATSAPP_ENABLED` and `VAPI_ENABLED` default to `false` — no external quota is ever consumed accidentally during local development.
 
 ---
 
 ## ⚠️ Known Limits
 
 - Online payments are simulated (`paymentMode: ONLINE`) — no payment gateway integrated.
-- WhatsApp & voice agents require `WHATSAPP_ENABLED=true` / `VAPI_ENABLED=true` and their respective API keys.
 - Email falls back to in-app notification if Gmail credentials are not set.
-- Twilio sandbox has a ~100 message limit; demo phones must opt-in by texting `join <sandbox-code>`.
 
 ---
 
@@ -347,6 +333,4 @@ MIT License — see [`LICENSE`](./LICENSE) for details.
 
 - **[Odoo](https://odoo.com)** — for the architectural philosophy this project is inspired by.
 - **[Groq](https://groq.com)** — for ultra-fast LLM inference powering Ask Playora.
-- **[Twilio](https://twilio.com)** — for the WhatsApp & SMS integration layer.
-- **[Vapi](https://vapi.ai)** — for the embedded voice booking widget.
 - **[Prisma](https://prisma.io)** — for a world-class ORM and migration system.
