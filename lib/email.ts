@@ -18,6 +18,61 @@ function getTransporter() {
   });
 }
 
+function shell(title: string, intro: string, body: string) {
+  return `
+    <div style="font-family: Inter, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #f8f7f5;">
+      <div style="background: #fff; border-radius: 12px; padding: 40px; border: 1px solid #e8e4e0;">
+        <h1 style="font-size: 22px; color: #1a1523; margin: 0 0 8px;">${title}</h1>
+        <p style="color: #6b7280; font-size: 15px; margin: 0 0 24px;">${intro}</p>
+        ${body}
+      </div>
+      <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 16px;">Sent by Yolla</p>
+    </div>`;
+}
+
+/** Generic transactional send; silently no-ops when SMTP is not configured (dev/demo). */
+export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.log(`[email skipped] ${subject} → ${to}`);
+    return false;
+  }
+  await getTransporter().sendMail({ from: `"Yolla" <${process.env.GMAIL_USER}>`, to, subject, html });
+  return true;
+}
+
+export async function sendMembershipExpiryEmail(to: string, firstName: string, planName: string, daysLeft: number, clubName: string, clubPhone: string | null) {
+  const when = daysLeft === 1 ? "tomorrow" : `in ${daysLeft} days`;
+  return sendEmail(
+    to,
+    `Your ${planName} membership ends ${when}`,
+    shell(
+      `Your ${planName} ends ${when}`,
+      `Hi ${firstName}, your ${clubName} membership expires ${when}. Renew at the front desk to keep your court discount and booking window.`,
+      clubPhone ? `<p style="color:#1a1523;font-size:15px;">Call or WhatsApp <strong>${clubPhone}</strong> and we'll sort it in a minute.</p>` : ""
+    )
+  );
+}
+
+export async function sendOrderReadyEmail(to: string, name: string, orderNo: string, clubName: string) {
+  return sendEmail(to, `Order ${orderNo} is ready for pickup`, shell("Ready for pickup", `Hi ${name}, your order ${orderNo} is waiting at the ${clubName} pro shop counter.`, ""));
+}
+
+export async function sendQuoteEmail(to: string, name: string, planName: string, billing: string, amount: string, clubName: string, clubPhone: string | null) {
+  return sendEmail(
+    to,
+    `${clubName} — your ${planName} membership quote`,
+    shell(
+      `${planName} membership`,
+      `Hi ${name}, thanks for your interest in ${clubName}. Here is the quote we discussed.`,
+      `<div style="background:#f8f7f5;border-radius:8px;padding:16px 20px;margin-bottom:16px;">
+        <p style="margin:0;color:#6b7280;font-size:13px;">${billing.toLowerCase()} billing</p>
+        <p style="margin:4px 0 0;color:#1a1523;font-size:28px;font-weight:700;">${amount}</p>
+      </div>
+      <p style="color:#1a1523;font-size:15px;">Reply to this email${clubPhone ? ` or call <strong>${clubPhone}</strong>` : ""} to book your free trial session.</p>`
+    )
+  );
+}
+
 export async function sendPasswordResetEmail(
   to: string,
   name: string,

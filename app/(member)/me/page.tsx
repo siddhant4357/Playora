@@ -5,8 +5,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { getMemberContext, getNextMemberBooking } from "@/lib/booking/queries";
 import { formatDateTime } from "@/lib/time";
 import { formatPaise } from "@/lib/money";
-import { PagePlaceholder } from "@/components/shared/PagePlaceholder";
+import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
+import { MemberCard } from "@/components/members/MemberCard";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -21,6 +22,7 @@ export default async function MemberHomePage() {
   const firstName = user?.name.split(" ")[0] ?? "there";
   const ctx = user ? await getMemberContext(user.userId) : null;
   const next = ctx?.member ? await getNextMemberBooking(ctx.member.id) : null;
+  const qrToken = ctx?.member ? (await prisma.member.findUnique({ where: { id: ctx.member.id }, select: { qrToken: true } }))?.qrToken ?? "" : "";
   const tz = ctx?.club.timezone ?? "Asia/Kolkata";
   const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hourCycle: "h23" }).format(new Date()));
 
@@ -72,12 +74,25 @@ export default async function MemberHomePage() {
         )}
       </section>
 
-      <PagePlaceholder
-        title="Your club, in your pocket"
-        phase="Phase 2 — Members"
-        description="Your membership card, expiry countdown and tab balance live here, with one-tap shortcuts to the shop and bar."
-        bullets={["QR membership card for check-in", "Plan, renew and payment history under Profile", "Bar tab and shop orders"]}
-      />
+      {ctx?.member && <MemberCard member={ctx.member} qrToken={qrToken} />}
+
+      <nav className="grid grid-cols-2 gap-3" aria-label="Shortcuts">
+        <Shortcut href="/me/book" title="Book a court" sub="Live availability" />
+        <Shortcut href="/me/shop" title="Pro shop" sub="Click & collect" />
+        <Shortcut href="/me/bookings" title="My bookings" sub="Upcoming & past" />
+        <Shortcut href="/me/profile" title="Profile" sub="Plan & payments" />
+      </nav>
     </div>
+  );
+}
+
+function Shortcut({ href, title, sub }: { href: string; title: string; sub: string }) {
+  return (
+    <Link href={href} className="flex flex-col gap-0.5 rounded-2xl p-4 transition-colors hover:opacity-90" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
+      <span className="font-semibold">{title}</span>
+      <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+        {sub}
+      </span>
+    </Link>
   );
 }

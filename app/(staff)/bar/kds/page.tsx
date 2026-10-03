@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
-import { PagePlaceholder } from "@/components/shared/PagePlaceholder";
+import { requireUser } from "@/lib/auth";
+import { getKitchenTickets } from "@/lib/bar/queries";
+import { KitchenBoard } from "@/components/bar/KitchenBoard";
 
 export const metadata: Metadata = { title: "Kitchen" };
 
-export default function KitchenDisplayPage() {
+export default async function KdsPage() {
+  const user = await requireUser("/bar/kds");
+  const tickets = await getKitchenTickets(user.clubId);
   return (
-    <PagePlaceholder
-      title="Kitchen display"
-      phase="Phase 3 — Bar & cafeteria"
-      description="Tickets arrive the moment the bar sends them. Tap to move NEW → PREPARING → READY → SERVED; timers turn amber at 8 minutes and red at 15."
-      bullets={["Large touch targets for a busy kitchen", "Sound on new ticket", "Full-screen mode for a wall-mounted tablet"]}
+    <KitchenBoard
+      tickets={tickets.map((t) => ({
+        tabId: t.tabId,
+        label: t.label,
+        tabNo: t.tabNo,
+        firstAt: t.firstAt.toISOString(),
+        items: t.items.map((i) => ({ id: i.id, name: i.name, qty: i.qty, status: i.kitchenStatus, notes: i.notes, modifiers: i.modifiers })),
+      }))}
     />
   );
 }

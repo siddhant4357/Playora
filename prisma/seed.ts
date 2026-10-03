@@ -250,6 +250,142 @@ async function seedMembers(clubId: string, plans: { id: string; tier: string }[]
   return out;
 }
 
+// ───────────────────────── Products (shop + bar menu) ─────────────────────────
+
+type Cat = "RACKET" | "BALL" | "SHOES" | "ACCESSORY" | "APPAREL" | "SERVICE" | "FOOD" | "BEVERAGE";
+const PRODUCTS: Array<{
+  sku: string; name: string; category: Cat; price: number; costPrice?: number; stock: number;
+  bar?: boolean; shop?: boolean; service?: boolean; track?: boolean; lowAt?: number; description?: string;
+}> = [
+  // Shop
+  { sku: "RKT-WPS97", name: "Wilson Pro Staff 97", category: "RACKET", price: 2199900, costPrice: 1650000, stock: 3, lowAt: 2, description: "Tour-grade control racket. 315g unstrung." },
+  { sku: "RKT-BPD", name: "Babolat Pure Drive", category: "RACKET", price: 1899900, costPrice: 1400000, stock: 6, lowAt: 2, description: "Power and spin for all-court players." },
+  { sku: "RKT-HSP", name: "Head Speed MP", category: "RACKET", price: 1999900, costPrice: 1500000, stock: 0, lowAt: 2, description: "Fast, precise, built for modern baseline play." },
+  { sku: "PDL-BUL", name: "Bullpadel Vertex 04", category: "RACKET", price: 2499900, costPrice: 1800000, stock: 4, lowAt: 2, description: "Diamond-shaped padel racket for attacking play." },
+  { sku: "BAL-WUS4", name: "Wilson US Open balls (4)", category: "BALL", price: 89900, costPrice: 60000, stock: 42, lowAt: 12 },
+  { sku: "BAL-HPD3", name: "Head Padel Pro balls (3)", category: "BALL", price: 69900, costPrice: 45000, stock: 18, lowAt: 10 },
+  { sku: "SHO-AGC", name: "Asics Gel-Resolution 9", category: "SHOES", price: 1299900, costPrice: 900000, stock: 5, lowAt: 2 },
+  { sku: "ACC-GRIP", name: "Overgrip (3 pack)", category: "ACCESSORY", price: 49900, costPrice: 25000, stock: 60, lowAt: 20 },
+  { sku: "ACC-DAMP", name: "Vibration dampener", category: "ACCESSORY", price: 19900, costPrice: 8000, stock: 2, lowAt: 10 },
+  { sku: "ACC-WRST", name: "Wristband pair", category: "ACCESSORY", price: 39900, costPrice: 15000, stock: 25, lowAt: 8 },
+  { sku: "APP-TEE", name: "Champions Club tee", category: "APPAREL", price: 149900, costPrice: 60000, stock: 30, lowAt: 8 },
+  { sku: "APP-CAP", name: "Champions Club cap", category: "APPAREL", price: 99900, costPrice: 40000, stock: 14, lowAt: 5 },
+  { sku: "SVC-RESTR", name: "Racket restringing", category: "SERVICE", price: 120000, service: true, track: false, stock: 0, description: "Includes Luxilon or Babolat string. 24h turnaround." },
+  { sku: "SVC-GRIP", name: "Regrip service", category: "SERVICE", price: 30000, service: true, track: false, stock: 0 },
+  // Bar — beverages (served at bar, no kitchen ticket)
+  { sku: "BEV-ESP", name: "Espresso", category: "BEVERAGE", price: 15000, costPrice: 3000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "BEV-CAP", name: "Cappuccino", category: "BEVERAGE", price: 22000, costPrice: 5000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "BEV-CLD", name: "Cold coffee", category: "BEVERAGE", price: 25000, costPrice: 6000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "BEV-LIME", name: "Fresh lime soda", category: "BEVERAGE", price: 12000, costPrice: 2500, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "BEV-WATER", name: "Mineral water 1L", category: "BEVERAGE", price: 5000, costPrice: 1800, stock: 48, bar: true, shop: true, lowAt: 24 },
+  { sku: "BEV-ISO", name: "Isotonic drink", category: "BEVERAGE", price: 9000, costPrice: 4000, stock: 36, bar: true, shop: true, lowAt: 12 },
+  { sku: "BEV-SHAKE", name: "Protein shake", category: "BEVERAGE", price: 28000, costPrice: 9000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "BEV-BEER", name: "Craft beer 330ml", category: "BEVERAGE", price: 35000, costPrice: 14000, stock: 72, bar: true, shop: false, lowAt: 24 },
+  // Bar — food (kitchen ticket)
+  { sku: "FOOD-CLUB", name: "Club sandwich", category: "FOOD", price: 32000, costPrice: 11000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "FOOD-PANEER", name: "Paneer tikka wrap", category: "FOOD", price: 28000, costPrice: 9000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "FOOD-FRIES", name: "Peri-peri fries", category: "FOOD", price: 18000, costPrice: 5000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "FOOD-BOWL", name: "Grilled chicken bowl", category: "FOOD", price: 42000, costPrice: 16000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "FOOD-SALAD", name: "Quinoa salad", category: "FOOD", price: 30000, costPrice: 10000, stock: 200, bar: true, shop: false, lowAt: 20 },
+  { sku: "FOOD-BROWN", name: "Brownie", category: "FOOD", price: 16000, costPrice: 4500, stock: 200, bar: true, shop: false, lowAt: 20 },
+];
+
+async function seedProducts(clubId: string) {
+  const out = [];
+  for (const p of PRODUCTS) {
+    const data = {
+      clubId,
+      name: p.name,
+      description: p.description ?? null,
+      category: p.category,
+      price: p.price,
+      costPrice: p.costPrice ?? null,
+      taxRatePct: p.category === "FOOD" || p.category === "BEVERAGE" ? 5 : 18,
+      isForBar: p.bar ?? false,
+      isForShop: p.shop ?? true,
+      isService: p.service ?? false,
+      trackStock: p.track ?? true,
+      lowStockAt: p.lowAt ?? 5,
+    };
+    const existing = await prisma.product.findUnique({ where: { sku: p.sku } });
+    if (existing) {
+      out.push(await prisma.product.update({ where: { sku: p.sku }, data }));
+    } else {
+      const created = await prisma.product.create({ data: { ...data, sku: p.sku, stockQty: p.stock } });
+      if (p.stock > 0) {
+        await prisma.stockMovement.create({
+          data: { clubId, productId: created.id, delta: p.stock, reason: "RESTOCK", note: "Opening stock" },
+        });
+      }
+      out.push(created);
+    }
+  }
+  return out;
+}
+
+// ───────────────────────── Bar tables ─────────────────────────
+
+const TABLES = [
+  ...[1, 2, 3, 4].map((n) => ({ name: `T${n}`, zone: "Indoor", seats: 4, sortOrder: n })),
+  ...[1, 2, 3].map((n) => ({ name: `P${n}`, zone: "Patio", seats: 6, sortOrder: 10 + n })),
+  ...[1, 2].map((n) => ({ name: `C${n}`, zone: "Court-side", seats: 2, sortOrder: 20 + n })),
+];
+
+async function seedTables(clubId: string) {
+  const out = [];
+  for (const t of TABLES) {
+    const existing = await prisma.barTable.findFirst({ where: { clubId, name: t.name } });
+    out.push(
+      existing
+        ? await prisma.barTable.update({ where: { id: existing.id }, data: t })
+        : await prisma.barTable.create({ data: { ...t, clubId } })
+    );
+  }
+  return out;
+}
+
+// ───────────────────────── Leads ─────────────────────────
+
+const LEADS = [
+  { name: "Rohan Iyer", phone: "+91 98200 00201", email: "rohan@example.com", interest: "Tennis", source: "WEBSITE", stage: "NEW" as const, message: "Looking for weekend coaching for myself and my son.", daysAgo: 0 },
+  { name: "Meera Nair", phone: "+91 98200 00202", interest: "Padel", source: "INSTAGRAM", stage: "NEW" as const, message: "Saw your padel courts on Instagram. Do you do beginner sessions?", daysAgo: 1 },
+  { name: "Arjun Patel", phone: "+91 98200 00203", email: "arjun.p@example.com", interest: "Membership", source: "WALK_IN", stage: "CONTACTED" as const, daysAgo: 3, followUpIn: 1 },
+  { name: "Shruti Jain", phone: "+91 98200 00204", interest: "Coaching", source: "REFERRAL", stage: "QUOTE_SENT" as const, daysAgo: 5, followUpIn: 0, quote: "SILVER" },
+  { name: "Dev Chawla", phone: "+91 98200 00205", email: "dev.c@example.com", interest: "Tennis", source: "WEBSITE", stage: "TRIAL_BOOKED" as const, daysAgo: 7, followUpIn: 2 },
+  { name: "Lakshmi Rao", phone: "+91 98200 00206", interest: "Padel", source: "WHATSAPP", stage: "LOST" as const, daysAgo: 14, lostReason: "Joined a club closer to home" },
+];
+
+async function seedLeads(clubId: string, plans: { id: string; tier: string; priceMonthly: number }[], userId: string) {
+  const now = Date.now();
+  for (const l of LEADS) {
+    const existing = await prisma.lead.findFirst({ where: { clubId, phone: l.phone } });
+    if (existing) continue;
+    const plan = l.quote ? plans.find((p) => p.tier === l.quote) : null;
+    const lead = await prisma.lead.create({
+      data: {
+        clubId,
+        name: l.name,
+        phone: l.phone,
+        email: l.email ?? null,
+        interest: l.interest,
+        source: l.source,
+        stage: l.stage,
+        message: l.message ?? null,
+        lostReason: l.lostReason ?? null,
+        nextFollowUp: l.followUpIn != null ? new Date(now + l.followUpIn * 86_400_000) : null,
+        quotePlanId: plan?.id ?? null,
+        quoteBilling: plan ? "MONTHLY" : null,
+        quoteAmount: plan?.priceMonthly ?? null,
+        quoteSentAt: plan ? new Date(now - 2 * 86_400_000) : null,
+        createdAt: new Date(now - l.daysAgo * 86_400_000),
+      },
+    });
+    await prisma.leadActivity.create({
+      data: { leadId: lead.id, type: "NOTE", content: `Lead captured via ${l.source.toLowerCase().replace("_", "-")}.`, byUserId: userId },
+    });
+  }
+}
+
 async function main() {
   console.log("Seeding Yolla…");
 
@@ -273,7 +409,16 @@ async function main() {
   const aditya = members.find((m) => m.memberCode === "CC-0001")!;
   await prisma.user.update({ where: { id: memberUser.id }, data: { memberId: aditya.id } });
 
+  const products = await seedProducts(club.id);
+  console.log(`  products ${products.length} (shop + bar menu)`);
+
+  const tables = await seedTables(club.id);
+  console.log(`  tables  ${tables.length}`);
+
   const owner = users.find((u) => u.role === "OWNER")!;
+  await seedLeads(club.id, plans, owner.id);
+  console.log(`  leads   ${LEADS.length}`);
+
   await seedActivity(club.id, owner.id);
 
   console.log("\nDone. All demo accounts use the password: demo1234");
