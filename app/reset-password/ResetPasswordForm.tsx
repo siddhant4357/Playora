@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { BrandMark } from "@/components/shared/BrandMark";
 import { Eye, EyeOff, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { resetPasswordAction } from "@/lib/actions/password-reset";
 import type { ActionResult } from "@/lib/actions/auth";
@@ -49,9 +49,7 @@ export default function ResetPasswordForm() {
   return (
     <div className="w-full bg-white px-8 py-10 shadow-sm rounded-xl border border-gray-100">
       <div className="mb-6 text-center">
-        <Link href="/" className="inline-block">
-          <Image src="/odoo-logo-clean.png" alt="Yolla" width={130} height={44} className="mx-auto" />
-        </Link>
+        <BrandMark />
       </div>
 
       <div className="mb-6 text-center">

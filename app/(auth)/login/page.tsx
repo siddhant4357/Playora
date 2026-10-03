@@ -9,8 +9,8 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
+import { BrandMark } from "@/components/shared/BrandMark";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginAction, type ActionResult } from "@/lib/actions/auth";
 
@@ -31,15 +31,7 @@ export default function LoginPage() {
           <div className="w-32 h-16 rounded-full opacity-0 dark:opacity-30 blur-2xl"
             style={{ background: "radial-gradient(ellipse, #714B67 0%, transparent 70%)" }} />
         </div>
-        <Link href="/" className="inline-block">
-          <Image
-            src="/odoo-logo-clean.png"
-            alt="Yolla"
-            width={130}
-            height={44}
-            className="mx-auto dark:brightness-110 dark:drop-shadow-[0_0_8px_rgba(200,155,219,0.4)]"
-          />
-        </Link>
+        <BrandMark />
       </div>
 
       {/* Error */}
