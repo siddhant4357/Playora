@@ -74,6 +74,15 @@ model Club {
   bookings     Booking[]
   waitlist     Waitlist[]
   transactions Transaction[]
+  checkIns     CheckIn[]
+  products     Product[]
+  stockMoves   StockMovement[]
+  orders       ShopOrder[]
+  serviceJobs  ServiceJob[]
+  tables       BarTable[]
+  tabs         BarTab[]
+  shifts       Shift[]
+  leads        Lead[]
 
   @@map("clubs")
 }
@@ -194,6 +203,12 @@ model Member {
   bookings         Booking[]
   waitlist         Waitlist[]
   transactions     Transaction[]
+  checkIns         CheckIn[]
+  orders           ShopOrder[]
+  serviceJobs      ServiceJob[]
+  tabs             BarTab[]
+  lead             Lead?
+  memberNotes      MemberNote[]
 
   @@index([clubId, phone])
   @@index([clubId, status])
@@ -456,6 +471,395 @@ model ActivityLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("activity_logs")
+}
+
+// ───────────────────────── Members: check-ins & notes ─────────────────────────
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  hashId    Int      @unique @default(autoincrement())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  method    String   @default("QR") // QR | MANUAL
+  byUserId  String?
+  createdAt DateTime @default(now())
+
+  @@index([clubId, createdAt])
+  @@index([memberId, createdAt])
+  @@map("check_ins")
+}
+
+model MemberNote {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  content   String
+  byUserId  String?
+  createdAt DateTime @default(now())
+
+  @@index([memberId, createdAt])
+  @@map("member_notes")
+}
+
+// ───────────────────────── Shop & inventory ─────────────────────────
+
+enum ProductCategory {
+  RACKET
+  BALL
+  SHOES
+  ACCESSORY
+  APPAREL
+  SERVICE
+  FOOD
+  BEVERAGE
+}
+
+// Single product row backs the counter, the online shop AND the bar menu.
+// stockQty is the one source of truth; every change goes through StockMovement.
+model Product {
+  id          String          @id @default(cuid())
+  hashId      Int             @unique @default(autoincrement())
+  clubId      String
+  club        Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  sku         String          @unique
+  name        String
+  description String?
+  category    ProductCategory
+  price       Int             // paise
+  costPrice   Int?
+  taxRatePct  Int             @default(18)
+  imageUrl    String?
+
+  isForBar    Boolean         @default(false)
+  isForShop   Boolean         @default(true)
+  isService   Boolean         @default(false)
+  isAvailable Boolean         @default(true) // bar "86'd" toggle
+  trackStock  Boolean         @default(true)
+  stockQty    Int             @default(0)
+  lowStockAt  Int             @default(5)
+  isActive    Boolean         @default(true)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  movements   StockMovement[]
+  orderItems  ShopOrderItem[]
+  tabItems    BarTabItem[]
+
+  @@index([clubId, category])
+  @@index([clubId, isForBar])
+  @@map("products")
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  hashId    Int      @unique @default(autoincrement())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  delta     Int      // +10 restock, -1 sale
+  reason    String   // SALE | RESTOCK | ADJUSTMENT | RETURN | WASTAGE
+  refType   String?  // ShopOrder | BarTab
+  refId     String?
+  note      String?
+  byUserId  String?
+  createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([clubId, createdAt])
+  @@map("stock_movements")
+}
+
+enum OrderChannel {
+  COUNTER
+  ONLINE
+}
+
+enum Fulfilment {
+  TAKEAWAY
+  CLICK_COLLECT
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PREPARING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+model ShopOrder {
+  id              String          @id @default(cuid())
+  hashId          Int             @unique @default(autoincrement())
+  clubId          String
+  club            Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  orderNo         String          @unique
+  memberId        String?
+  member          Member?         @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  guestName       String?
+  guestPhone      String?
+  guestEmail      String?
+  channel         OrderChannel
+  fulfilment      Fulfilment      @default(TAKEAWAY)
+  deliveryAddress String?
+  status          OrderStatus     @default(PENDING)
+  subtotal        Int
+  discountPct     Int             @default(0)
+  discount        Int             @default(0)
+  tax             Int
+  total           Int
+  paymentMode     PaymentMode?
+  transactionId   String?         @unique
+  notes           String?
+  byUserId        String?
+  items           ShopOrderItem[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([clubId, status])
+  @@index([clubId, createdAt])
+  @@map("shop_orders")
+}
+
+model ShopOrderItem {
+  id        String    @id @default(cuid())
+  orderId   String
+  order     ShopOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name      String
+  qty       Int
+  unitPrice Int
+  total     Int
+
+  @@map("shop_order_items")
+}
+
+enum ServiceJobStatus {
+  RECEIVED
+  IN_PROGRESS
+  READY
+  COLLECTED
+}
+
+// Restringing and other workshop jobs.
+model ServiceJob {
+  id           String           @id @default(cuid())
+  hashId       Int              @unique @default(autoincrement())
+  clubId       String
+  club         Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  jobNo        String           @unique
+  memberId     String?
+  member       Member?          @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  customerName String
+  phone        String
+  item         String           // "Wilson Pro Staff — 24 lbs"
+  service      String           // "Restring"
+  price        Int
+  status       ServiceJobStatus @default(RECEIVED)
+  dueAt        DateTime
+  readyAt      DateTime?
+  collectedAt  DateTime?
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([clubId, status])
+  @@map("service_jobs")
+}
+
+// ───────────────────────── Bar & cafeteria ─────────────────────────
+
+model BarTable {
+  id        String   @id @default(cuid())
+  hashId    Int      @unique @default(autoincrement())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  name      String   // "T1", "Patio 3"
+  zone      String   @default("Indoor") // Indoor | Patio | Court-side
+  seats     Int      @default(4)
+  qrToken   String   @unique @default(cuid())
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  tabs      BarTab[]
+
+  @@index([clubId, zone])
+  @@map("bar_tables")
+}
+
+enum TabStatus {
+  OPEN
+  SETTLED
+  VOID
+}
+
+model BarTab {
+  id          String       @id @default(cuid())
+  hashId      Int          @unique @default(autoincrement())
+  clubId      String
+  club        Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  tabNo       String       @unique
+  tableId     String?
+  table       BarTable?    @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  memberId    String?
+  member      Member?      @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  guestName   String?
+  guestPhone  String?
+  source      String       @default("POS") // POS | QR
+  status      TabStatus    @default(OPEN)
+  openedById  String?
+  openedAt    DateTime     @default(now())
+  settledAt   DateTime?
+  discountPct Int          @default(0)
+  subtotal    Int          @default(0)
+  discount    Int          @default(0)
+  tax         Int          @default(0)
+  total       Int          @default(0)
+  voidReason  String?
+  shiftId     String?
+  shift       Shift?       @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+
+  items       BarTabItem[]
+  payments    Payment[]
+
+  @@index([clubId, status])
+  @@index([clubId, openedAt])
+  @@map("bar_tabs")
+}
+
+enum KitchenStatus {
+  NEW
+  PREPARING
+  READY
+  SERVED
+  CANCELLED
+}
+
+model BarTabItem {
+  id              String        @id @default(cuid())
+  hashId          Int           @unique @default(autoincrement())
+  tabId           String
+  tab             BarTab        @relation(fields: [tabId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name            String
+  qty             Int
+  unitPrice       Int
+  modifiers       String[]      @default([])
+  notes           String?
+  needsKitchen    Boolean       @default(true) // FOOD → kitchen; BEVERAGE served at bar
+  kitchenStatus   KitchenStatus @default(NEW)
+  sentToKitchenAt DateTime      @default(now())
+  readyAt         DateTime?
+  servedAt        DateTime?
+  voidReason      String?
+
+  @@index([tabId])
+  @@index([kitchenStatus, sentToKitchenAt])
+  @@map("bar_tab_items")
+}
+
+// Split payments on a tab. Each row also lands in Transaction when the tab settles.
+model Payment {
+  id        String      @id @default(cuid())
+  tabId     String
+  tab       BarTab      @relation(fields: [tabId], references: [id], onDelete: Cascade)
+  mode      PaymentMode
+  amount    Int
+  reference String?
+  byUserId  String?
+  createdAt DateTime    @default(now())
+
+  @@map("payments")
+}
+
+// A bar shift: clock in with opening cash, close with counted cash → Z-report.
+model Shift {
+  id          String    @id @default(cuid())
+  hashId      Int       @unique @default(autoincrement())
+  clubId      String
+  club        Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  area        String    @default("BAR")
+  openedById  String
+  openedByName String
+  startsAt    DateTime  @default(now())
+  endsAt      DateTime?
+  openingCash Int       @default(0)
+  closingCash Int?
+  expectedCash Int?
+  notes       String?
+  report      Json?     // frozen Z-report snapshot at close
+
+  tabs        BarTab[]
+
+  @@index([clubId, startsAt])
+  @@map("shifts")
+}
+
+// ───────────────────────── Leads / CRM ─────────────────────────
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUOTE_SENT
+  TRIAL_BOOKED
+  CONVERTED
+  LOST
+}
+
+model Lead {
+  id           String         @id @default(cuid())
+  hashId       Int            @unique @default(autoincrement())
+  clubId       String
+  club         Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberId     String?        @unique
+  member       Member?        @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  name         String
+  phone        String
+  email        String?
+  interest     String?        // Tennis, Padel, Membership, Coaching
+  source       String         @default("WEBSITE") // WEBSITE | WALK_IN | PHONE | WHATSAPP | REFERRAL | INSTAGRAM
+  stage        LeadStage      @default(NEW)
+  message      String?
+  assignedToId String?
+  nextFollowUp DateTime?
+  lostReason   String?
+
+  quotePlanId  String?
+  quoteBilling String?        // MONTHLY | YEARLY
+  quoteAmount  Int?
+  quoteSentAt  DateTime?
+  trialBookingId String?      @unique
+
+  activities   LeadActivity[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([clubId, stage])
+  @@index([clubId, nextFollowUp])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String   // NOTE | CALL | WHATSAPP | EMAIL | QUOTE | STAGE_CHANGE | TRIAL
+  content   String
+  byUserId  String?
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+  @@map("lead_activities")
 }
 
 model PasswordResetToken {
