@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { optionalPhoneSchema } from "@/lib/validation/phone";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { AuthError, requireRole, requireUser } from "@/lib/auth";
@@ -138,7 +139,7 @@ const ServiceJob = z.object({
   productId: z.string(),
   memberId: z.string().nullable().optional(),
   customerName: z.string().trim().max(80).optional(),
-  phone: z.string().trim().max(20).optional(),
+  phone: optionalPhoneSchema,
   item: z.string().trim().min(2, "Describe the racket / item.").max(120),
   notes: z.string().trim().max(200).optional(),
   turnaroundHours: z.number().int().min(1).max(168).default(24),

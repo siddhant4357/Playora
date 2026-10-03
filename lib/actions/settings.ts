@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { optionalPhoneSchema } from "@/lib/validation/phone";
 import { prisma } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { logActivity } from "@/lib/kernel";
@@ -15,7 +16,7 @@ const ProfileSchema = z
   .object({
     name: z.string().trim().min(2, "Club name is too short").max(80),
     tagline: z.string().trim().max(140).optional().or(z.literal("")),
-    phone: z.string().trim().max(32).optional().or(z.literal("")),
+    phone: optionalPhoneSchema,
     email: z.string().trim().email("Enter a valid email").optional().or(z.literal("")),
     address: z.string().trim().max(240).optional().or(z.literal("")),
     timezone: z.string().trim().min(3).max(64),

@@ -27,9 +27,13 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
+    // Printing every SQL statement to the terminal is a real drag on dev page
+    // loads (especially on Windows consoles). Opt in with PRISMA_LOG_QUERIES=1.
     log:
       process.env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
+        ? process.env.PRISMA_LOG_QUERIES === "1"
+          ? ["query", "error", "warn"]
+          : ["error", "warn"]
         : ["error"],
   });
 

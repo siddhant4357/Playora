@@ -8,6 +8,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { signupAction, type ActionResult } from "@/lib/actions/auth";
@@ -31,6 +32,7 @@ export default function RegisterPage() {
     null
   );
   const [showPassword, setShowPassword] = useState(false);
+  const callbackUrl = useSearchParams().get("callbackUrl") ?? "";
 
   return (
     <div className={cardClass}>
@@ -50,6 +52,7 @@ export default function RegisterPage() {
       )}
 
       <form action={action} className="space-y-5">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         {/* Name */}
         <div>
           <label htmlFor="register-name" className={labelClass}>Full name</label>

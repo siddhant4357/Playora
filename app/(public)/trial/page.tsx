@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 import { getDefaultClub } from "@/lib/club";
 import { getFreeThisWeek } from "@/lib/leads/queries";
 import { TrialForm } from "@/components/public/TrialForm";
@@ -11,10 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default async function TrialPage({ searchParams }: { searchParams: Promise<{ court?: string; at?: string }> }) {
-  const club = await getDefaultClub();
+  const [club, user] = await Promise.all([getDefaultClub(), getCurrentUser()]);
   if (!club) notFound();
   const { court, at } = await searchParams;
   const slots = await getFreeThisWeek(club.id, { days: 7, perDay: 60, fromMinute: 6 * 60, dedupeTimes: false });
+  const returnTo = `/trial${court && at ? `?court=${encodeURIComponent(court)}&at=${encodeURIComponent(at)}` : ""}`;
 
   return (
     <>
@@ -30,7 +32,13 @@ export default async function TrialPage({ searchParams }: { searchParams: Promis
         </p>
       </header>
 
-      <TrialForm slots={slots} timezone={club.timezone} preselect={court && at ? { courtId: court, startsAt: at } : null} />
+      <TrialForm
+        slots={slots}
+        timezone={club.timezone}
+        preselect={court && at ? { courtId: court, startsAt: at } : null}
+        viewer={user ? { name: user.name ?? "", email: user.email ?? "" } : null}
+        returnTo={returnTo}
+      />
     </>
   );
 }

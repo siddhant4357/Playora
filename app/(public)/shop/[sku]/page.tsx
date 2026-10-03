@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDefaultClub } from "@/lib/club";
@@ -40,7 +41,11 @@ export default async function ProductPage({ params }: Props) {
       <div className="pub-split" style={{ marginTop: 20 }}>
         <div className="prod" style={{ maxWidth: 560 }}>
           <div className="img" style={{ aspectRatio: "1 / 1" }}>
-            {p.imageUrl ? <img src={p.imageUrl} alt={p.name} /> : <span aria-hidden="true">{p.name.slice(0, 2).toUpperCase()}</span>}
+            {p.imageUrl ? (
+              <Image src={p.imageUrl} alt={p.name} width={560} height={560} sizes="(min-width: 768px) 560px, 100vw" priority />
+            ) : (
+              <span aria-hidden="true">{p.name.slice(0, 2).toUpperCase()}</span>
+            )}
           </div>
         </div>
         <div className="pub-card pub-side">

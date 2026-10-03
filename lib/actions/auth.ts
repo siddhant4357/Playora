@@ -144,7 +144,7 @@ export async function signupAction(
   });
   await setSessionCookie(token);
 
-  redirect(homeFor("MEMBER"));
+  redirect(safeCallback(formData.get("callbackUrl")) ?? homeFor("MEMBER"));
 }
 
 // ── loginAction ──────────────────────────────────────────────────────────────

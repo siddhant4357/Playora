@@ -13,9 +13,13 @@ interface Props {
   slots: FreeSlotCard[];
   timezone: string;
   preselect: { courtId: string; startsAt: string } | null;
+  /** Signed-in visitor, or null. A trial holds a real court, so booking needs an account. */
+  viewer: { name: string; email: string } | null;
+  /** Where login/register should send the visitor back to (keeps the chosen slot). */
+  returnTo: string;
 }
 
-export function TrialForm({ slots, timezone, preselect }: Props) {
+export function TrialForm({ slots, timezone, preselect, viewer, returnTo }: Props) {
   const days = useMemo(() => {
     const seen = new Map<string, string>();
     for (const s of slots) if (!seen.has(s.dateKey)) seen.set(s.dateKey, s.dayLabel);
@@ -116,15 +120,24 @@ export function TrialForm({ slots, timezone, preselect }: Props) {
         <div className="pub-form">
           <label>
             Your name
-            <input name="name" required autoComplete="name" placeholder="Priya Sharma" />
+            <input name="name" required autoComplete="name" placeholder="Priya Sharma" defaultValue={viewer?.name ?? ""} />
           </label>
           <label>
             Phone
-            <input name="phone" required type="tel" autoComplete="tel" placeholder="+91 98xxx xxxxx" />
+            <input
+              name="phone"
+              required
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+91 98xxx xxxxx"
+              pattern="^\+?[0-9\s\-().]{10,20}$"
+              title="Digits only, at least 10 of them. A + is allowed at the start."
+            />
           </label>
           <label>
             Email <span style={{ fontWeight: 400, color: "var(--muted)" }}>(optional)</span>
-            <input name="email" type="email" autoComplete="email" />
+            <input name="email" type="email" autoComplete="email" defaultValue={viewer?.email ?? ""} />
           </label>
           <label>
             Sport
@@ -157,9 +170,25 @@ export function TrialForm({ slots, timezone, preselect }: Props) {
               {error}
             </p>
           )}
-          <button type="submit" className="btn btn-primary btn-lg" disabled={pending || !picked}>
-            {pending ? "Holding your court…" : "Book my free trial"}
-          </button>
+          {viewer ? (
+            <button type="submit" className="btn btn-primary btn-lg" disabled={pending || !picked}>
+              {pending ? "Holding your court…" : "Book my free trial"}
+            </button>
+          ) : (
+            <div className="pub-signin" role="note">
+              <p className="pub-note" style={{ margin: 0 }}>
+                Booking holds a real court, so we need to know it&apos;s you. Sign in or create a free account — your slot stays selected.
+              </p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Link href={`/login?callbackUrl=${encodeURIComponent(returnTo)}`} className="btn btn-primary btn-lg">
+                  Sign in to book
+                </Link>
+                <Link href={`/register?callbackUrl=${encodeURIComponent(returnTo)}`} className="btn btn-outline btn-lg">
+                  Create a free account
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     </form>
