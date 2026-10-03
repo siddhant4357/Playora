@@ -22,7 +22,7 @@ export default async function MemberBookingsPage() {
     <div className="flex flex-col gap-5">
       <header className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight">My bookings</h1>
-        <Button size="sm" render={<Link href="/me/book" />}>
+        <Button size="sm" nativeButton={false} render={<Link href="/me/book" />}>
           <CalendarPlus className="h-4 w-4" />
           Book
         </Button>
@@ -37,7 +37,7 @@ export default async function MemberBookingsPage() {
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
               Nothing booked. Courts are waiting.
             </p>
-            <Button variant="outline" size="sm" render={<Link href="/me/book" />}>
+            <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/me/book" />}>
               Find a slot
             </Button>
           </div>

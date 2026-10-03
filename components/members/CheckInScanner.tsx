@@ -128,7 +128,7 @@ function ResultCard({ result, onDismiss }: { result: CheckInResult; onDismiss: (
         )}
         <div className="mt-2 flex gap-2">
           {result.member && (
-            <Button size="sm" variant="outline" render={<Link href={`/desk/members/${result.member.id}`} />}>
+            <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/desk/members/${result.member.id}`} />}>
               Open profile
             </Button>
           )}

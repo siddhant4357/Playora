@@ -66,7 +66,7 @@ export default async function MemberHomePage() {
         ) : (
           <>
             <p className="text-sm opacity-90">No upcoming sessions. Evenings fill up fast.</p>
-            <Button variant="secondary" size="sm" className="self-start" render={<Link href="/me/book" />}>
+            <Button variant="secondary" size="sm" className="self-start" nativeButton={false} render={<Link href="/me/book" />}>
               <CalendarPlus className="h-4 w-4" />
               Book a court
             </Button>

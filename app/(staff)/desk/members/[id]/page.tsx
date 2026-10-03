@@ -53,7 +53,7 @@ export default async function Member360Page({ params }: { params: Promise<{ id: 
         }
         actions={
           <>
-            <Button variant="outline" render={<Link href={`/desk?member=${m.id}`} />}>
+            <Button variant="outline" nativeButton={false} render={<Link href={`/desk?member=${m.id}`} />}>
               Book a court
             </Button>
             <MemberActions memberId={m.id} status={m.status} currentPlanId={m.planId} creditBalance={m.creditBalance} plans={plans.map((p) => ({ id: p.id, name: p.name, priceMonthly: p.priceMonthly, priceYearly: p.priceYearly }))} canManage={canManage} />
