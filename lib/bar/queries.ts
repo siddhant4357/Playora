@@ -5,7 +5,7 @@ export async function getMenu(clubId: string, opts: { includeUnavailable?: boole
   return prisma.product.findMany({
     where: { clubId, isForBar: true, isActive: true, ...(opts.includeUnavailable ? {} : { isAvailable: true }) },
     orderBy: [{ category: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, description: true, category: true, price: true, isAvailable: true, stockQty: true, trackStock: true, lowStockAt: true, imageUrl: true, taxRatePct: true },
+    select: { id: true, name: true, description: true, category: true, price: true, isAvailable: true, stockQty: true, trackStock: true, lowStockAt: true, imageUrl: true, taxRatePct: true, costPrice: true },
   });
 }
 

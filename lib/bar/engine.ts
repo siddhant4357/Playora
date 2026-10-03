@@ -13,6 +13,10 @@ import { KernelError, docNumber, logActivity, moveStock, postTransaction, totalL
 
 export { KernelError as BarError };
 
+// Concurrent orders on the same product serialize on its row lock; with a
+// remote Postgres that can exceed Prisma's 5s default under a rush.
+const TX_OPTS = { timeout: 20_000, maxWait: 10_000 };
+
 async function recalc(tx: Tx, tabId: string) {
   const tab = await tx.barTab.findUnique({ where: { id: tabId }, include: { items: { where: { kitchenStatus: { not: "CANCELLED" } }, include: { product: { select: { taxRatePct: true } } } } } });
   if (!tab) throw new KernelError("NOT_FOUND", "Tab not found.");
@@ -32,12 +36,13 @@ export async function openTab(input: { clubId: string; tableId?: string | null; 
       const existing = await tx.barTab.findFirst({ where: { tableId: input.tableId, status: "OPEN" }, select: { id: true } });
       if (existing) return existing.id; // one open tab per table — reuse it
     }
-    const seq = (await tx.barTab.count({ where: { clubId: input.clubId } })) + 1;
     const shift = await currentShift(tx, input.clubId);
-    const tab = await tx.barTab.create({
+    // tabNo is derived from the row's own autoincrement after insert: unique
+    // under concurrency and immune to deletions, unlike count()+1.
+    const created = await tx.barTab.create({
       data: {
         clubId: input.clubId,
-        tabNo: docNumber("TAB", seq),
+        tabNo: `pending-${crypto.randomUUID()}`,
         tableId: input.tableId ?? null,
         memberId: input.memberId ?? null,
         guestName: input.guestName ?? null,
@@ -47,6 +52,7 @@ export async function openTab(input: { clubId: string; tableId?: string | null; 
         shiftId: shift?.id ?? null,
       },
     });
+    const tab = await tx.barTab.update({ where: { id: created.id }, data: { tabNo: docNumber("TAB", created.hashId) } });
     return tab.id;
   });
 }
@@ -80,11 +86,11 @@ export async function addItems(input: { clubId: string; tabId: string; lines: { 
         },
       });
       // Bar stock is decremented at order time so the 86 list stays honest.
-      await moveStock(tx, { clubId: input.clubId, productId: p.id, delta: -line.qty, reason: "SALE", refType: "BarTab", refId: tab.id, byUserId: input.byUserId, allowNegative: true });
+      await moveStock(tx, { clubId: input.clubId, productId: p.id, delta: -line.qty, reason: "SALE", refType: "BarTab", refId: tab.id, byUserId: input.byUserId });
     }
     await recalc(tx, tab.id);
     return tab.id;
-  });
+  }, TX_OPTS);
 }
 
 export async function voidItem(input: { clubId: string; itemId: string; reason: string; byUserId?: string | null }) {
@@ -136,7 +142,7 @@ export async function bumpTicket(input: { clubId: string; tabId: string; to: "PR
   });
 }
 
-// ───────────────────────── Settle ─────────────────────────
+// ──��────────────────────── Settle ─────────────────────────
 
 export async function settleTab(input: { clubId: string; tabId: string; payments: { mode: PaymentMode; amount: number; reference?: string }[]; byUserId?: string | null }) {
   return prisma.$transaction(async (tx) => {
@@ -174,7 +180,7 @@ export async function settleTab(input: { clubId: string; tabId: string; payments
     await tx.barTab.update({ where: { id: tab.id }, data: { status: "SETTLED", settledAt: new Date(), shiftId: tab.shiftId ?? shift?.id ?? null } });
     await tx.barTabItem.updateMany({ where: { tabId: tab.id, kitchenStatus: { in: ["NEW", "PREPARING", "READY"] } }, data: { kitchenStatus: "SERVED", servedAt: new Date() } });
     return tab;
-  });
+  }, TX_OPTS);
 }
 
 export async function voidTab(input: { clubId: string; tabId: string; reason: string; byUserId?: string | null }) {
@@ -187,7 +193,7 @@ export async function voidTab(input: { clubId: string; tabId: string; reason: st
     await tx.barTabItem.updateMany({ where: { tabId: tab.id }, data: { kitchenStatus: "CANCELLED" } });
     await tx.barTab.update({ where: { id: tab.id }, data: { status: "VOID", voidReason: input.reason, settledAt: new Date() } });
     await logActivity(tx, { clubId: input.clubId, userId: input.byUserId, action: "BAR_TAB_VOID", entity: "BarTab", entityId: tab.id, meta: { reason: input.reason, total: tab.total } });
-  });
+  }, TX_OPTS);
 }
 
 // ───────────────────────── Shifts ─────────────────────────
