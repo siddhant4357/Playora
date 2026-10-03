@@ -20,8 +20,7 @@ export function Nav({ appHref = null }: NavProps) {
     <header className="ln">
       <div className="l-container ln-inner">
         <Link href="/" className="ln-brand" aria-label="Playora home">
-          <BrandLogo height={24} />
-          <small>for The Champions Club</small>
+          <BrandLogo height={30} />
         </Link>
 
         <nav aria-label="Primary">

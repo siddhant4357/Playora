@@ -166,9 +166,24 @@ export function TrialForm({ slots, timezone, preselect, viewer, returnTo }: Prop
             </p>
           )}
           {error && (
-            <p className="pub-error" role="alert">
-              {error}
-            </p>
+            error.toLowerCase().includes("already has a trial") ? (
+              <div className="pub-error" role="alert" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <strong>You already have a trial booked! 🎾</strong>
+                <span>This phone number is already registered for a free trial session. You can only book one free trial per person.</span>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                  <Link href="/login" className="btn btn-primary" style={{ fontSize: 13, padding: "6px 14px" }}>
+                    Sign in to see your booking
+                  </Link>
+                  <Link href="/courts" className="btn btn-outline" style={{ fontSize: 13, padding: "6px 14px" }}>
+                    Browse courts instead
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <p className="pub-error" role="alert">
+                {error}
+              </p>
+            )
           )}
           {viewer ? (
             <button type="submit" className="btn btn-primary btn-lg" disabled={pending || !picked}>

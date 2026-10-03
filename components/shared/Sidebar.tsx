@@ -54,13 +54,8 @@ export function Sidebar({ userRole, clubName, isOpen, onToggle }: SidebarProps) 
           className="flex items-center justify-between flex-shrink-0 px-4"
           style={{ height: "56px", borderBottom: "1px solid var(--color-border)" }}
         >
-          <Link href="/" className="flex flex-col gap-0.5 leading-tight min-w-0" aria-label="Playora home">
-            <BrandLogo height={16} className="self-start" />
-            {clubName && (
-              <span className="text-[10px] truncate" style={{ color: "var(--color-text-muted)" }}>
-                {clubName}
-              </span>
-            )}
+          <Link href="/" aria-label="Playora home">
+            <BrandLogo height={28} />
           </Link>
           <button
             onClick={onToggle}

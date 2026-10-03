@@ -40,11 +40,8 @@ export function MemberShell({ user, clubName, children }: MemberShellProps) {
           borderBottom: "1px solid var(--color-border)",
         }}
       >
-        <Link href="/" className="flex flex-col gap-0.5 leading-tight" aria-label="Playora home">
-          <BrandLogo height={16} className="self-start" />
-          <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>
-            {clubName}
-          </span>
+        <Link href="/" className="flex items-center" aria-label="Playora home">
+          <BrandLogo height={28} className="self-start" />
         </Link>
         <div className="flex items-center gap-1">
           <ThemeToggle />

@@ -37,7 +37,6 @@ export function Hero() {
         </h1>
         <p className="lh-sub">
           Courts, members, bar, shop and the money — one record per person, one ledger for every rupee.
-          Built for The Champions Club&apos;s Friday rush, ready for any club.
         </p>
         <div className="lh-actions">
           <Link href="/trial" className="btn btn-primary btn-lg">

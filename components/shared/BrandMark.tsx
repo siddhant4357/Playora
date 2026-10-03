@@ -9,15 +9,23 @@ export const BRAND_LOGO = "/playora-logo.jpeg";
  * Playora wordmark. The source artwork sits on a white background, so it is
  * always rendered on a white plate to stay legible in dark mode.
  */
-export function BrandLogo({ height = 28, className }: { height?: number; className?: string }) {
+export function BrandLogo({ height = 38, className }: { height?: number; className?: string }) {
   const width = Math.round(height * 3.2);
   return (
     <span
       aria-hidden="true"
-      className={cn("inline-flex items-center rounded-md bg-white px-2 py-1", className)}
-      style={{ height: height + 8 }}
+      className={cn("inline-flex items-center", className)}
+      style={{ height }}
     >
-      <Image src={BRAND_LOGO} alt="" width={width} height={height} priority style={{ height, width: "auto" }} />
+      <Image
+        src={BRAND_LOGO}
+        alt=""
+        width={width}
+        height={height}
+        priority
+        className="mix-blend-multiply dark:invert dark:mix-blend-screen"
+        style={{ height, width: "auto" }}
+      />
     </span>
   );
 }
