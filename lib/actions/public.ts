@@ -9,6 +9,7 @@ import { bookTrialForLead, createLead, LEAD_INTERESTS } from "@/lib/leads/engine
 import { placeOnlineOrder } from "@/lib/shop/engine";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { optionalPhoneSchema, phoneProblem, phoneSchema } from "@/lib/validation/phone";
 
 export type PublicResult<T = undefined> = { success: true; message: string; data: T } | { success: false; error: string };
 
@@ -30,7 +31,7 @@ const Honeypot = z.object({ company: z.string().max(0, "Rejected").optional() })
 
 const EnquirySchema = Honeypot.extend({
   name: z.string().trim().min(1, "Tell us your name"),
-  phone: z.string().trim().min(8, "Phone looks too short"),
+  phone: phoneSchema,
   email: z.string().trim().email("Invalid email").or(z.literal("")).optional(),
   interest: z.enum(LEAD_INTERESTS).optional(),
   message: z.string().trim().min(1, "What can we help with?").max(1000),
@@ -50,7 +51,7 @@ export async function submitEnquiryAction(input: z.input<typeof EnquirySchema>):
 
 const TrialSchema = Honeypot.extend({
   name: z.string().trim().min(1, "Tell us your name"),
-  phone: z.string().trim().min(8, "Phone looks too short"),
+  phone: phoneSchema,
   email: z.string().trim().email("Invalid email").or(z.literal("")).optional(),
   interest: z.enum(LEAD_INTERESTS).default("Tennis"),
   courtId: z.string().min(1, "Pick a slot"),
@@ -58,11 +59,21 @@ const TrialSchema = Honeypot.extend({
   message: z.string().trim().max(500).optional(),
 });
 
+// "use server" modules may only export async functions, so this stays local.
+const SIGN_IN_REQUIRED = "Please sign in or create a free account to book a court.";
+
+/**
+ * A trial books a real court slot, so it needs an account: the booking is
+ * tied to a signed-in user and the lead is created under their email.
+ * Enquiries (no booking) stay open to anonymous visitors.
+ */
 export async function bookTrialPublicAction(input: z.input<typeof TrialSchema>): Promise<PublicResult<{ courtName: string; startsAt: string; leadId: string }>> {
   try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: SIGN_IN_REQUIRED };
     const data = TrialSchema.parse(input);
     const club = await requireClub();
-    const { lead } = await createLead({ clubId: club.id, name: data.name, phone: data.phone, email: data.email || null, interest: data.interest, source: "WEBSITE", message: data.message || "Booked a trial from the website" });
+    const { lead } = await createLead({ clubId: club.id, name: data.name, phone: data.phone, email: data.email || user.email || null, interest: data.interest, source: "WEBSITE", message: data.message || "Booked a trial from the website" });
     const res = await bookTrialForLead({ clubId: club.id, leadId: lead.id, courtId: data.courtId, startsAt: new Date(data.startsAt), source: "WEB" });
     revalidatePath("/desk/leads");
     revalidatePath("/desk");
@@ -76,7 +87,7 @@ export async function bookTrialPublicAction(input: z.input<typeof TrialSchema>):
 
 const GuestOrderSchema = Honeypot.extend({
   name: z.string().trim().max(120).optional(),
-  phone: z.string().trim().max(32).optional(),
+  phone: optionalPhoneSchema,
   email: z.string().trim().email("Invalid email").or(z.literal("")).optional(),
   fulfilment: z.enum(["CLICK_COLLECT", "DELIVERY"]),
   deliveryAddress: z.string().trim().max(400).optional(),
@@ -96,7 +107,8 @@ export async function placeGuestOrderAction(input: z.input<typeof GuestOrderSche
     const member = user ? await prisma.member.findFirst({ where: { user: { id: user.userId }, clubId: club.id }, select: { id: true } }) : null;
     if (!member) {
       if (!data.name) return { success: false, error: "Tell us your name." };
-      if (!data.phone || data.phone.replace(/\D/g, "").length < 8) return { success: false, error: "Phone looks too short." };
+      const phoneIssue = phoneProblem(data.phone);
+      if (phoneIssue) return { success: false, error: phoneIssue };
     }
     const order = await placeOnlineOrder({
       clubId: club.id,

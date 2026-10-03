@@ -110,7 +110,19 @@ to set. On Vercel the OIDC token is injected automatically. Locally, run
 > The Gateway requires a card on file for the team before it serves requests
 > (it then unlocks free credits). Until then, Ask AI falls back to vetted
 > queries for the six suggested questions and tells you so; the WhatsApp
-> agent replies with a "call the front desk" message.
+> agent degrades to a **rule-based desk** (`lib/agent/fallback.ts`) that
+> still understands "free padel tomorrow", "book tennis 7pm", "my bookings"
+> and "cancel", and calls the same kernel tools — so bookings go through
+> either way. Each reply is logged with `engine: "model" | "rules"`.
+> The Vapi voice agent never needs the Gateway: Vapi hosts the LLM and only
+> calls `/api/vapi/tools` for facts and actions.
+
+How the agents run "in the background": there is no long-running process.
+Twilio and Vapi POST to the two routes above on each message / tool call,
+so they work on any deployment with a public URL (Vercel preview or
+production). The v0 preview is not reachable by Twilio; set the webhook to
+your deployed URL. `/owner/settings` shows which of the four integrations
+has its variables set.
 
 Ask AI safety model (`lib/ask/engine.ts`):
 
@@ -140,6 +152,7 @@ npx tsx scripts/test-shop-engine.ts      # 30
 npx tsx scripts/test-hr-engine.ts
 npx tsx scripts/test-ask-guard.ts        # 16
 npx tsx scripts/test-ask-canned.ts
+npx tsx scripts/test-agent-fallback.ts  # 15 — WhatsApp desk without a model
 ```
 
 All scripts need `DATABASE_URL`; run with

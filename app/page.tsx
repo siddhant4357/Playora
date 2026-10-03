@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import "./landing.css";
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
@@ -21,9 +22,18 @@ export const metadata: Metadata = {
     "Courts, members, bar, shop and the money on one screen. Book a court, join a plan or sign in to run the club.",
 };
 
+// The live strip is marketing, not a booking surface: a 60 s stale window is
+// fine and keeps the landing page off the hot DB path. Booking actions call
+// revalidatePath("/") so a fresh booking still drops a slot immediately.
+const getLandingSlots = unstable_cache(
+  async (clubId: string) => getFreeThisWeek(clubId, { days: 7, perDay: 2 }).catch(() => []),
+  ["landing-free-slots"],
+  { revalidate: 60 },
+);
+
 export default async function HomePage() {
   const [user, club] = await Promise.all([getCurrentUser(), getDefaultClub()]);
-  const slots = club ? await getFreeThisWeek(club.id, { days: 7, perDay: 2 }).catch(() => []) : [];
+  const slots = club ? await getLandingSlots(club.id) : [];
   return (
     <div className="landing">
       <Nav appHref={user ? homeFor(user.role) : null} />

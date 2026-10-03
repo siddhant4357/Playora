@@ -8,6 +8,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { logActivity } from "@/lib/kernel";
 import { bookCourt, cancelBooking, checkAvailability, myBookings, resolveContext, TOOL_DEFS, type AgentContext } from "@/lib/agent/tools";
+import { runRuleBasedAgent } from "@/lib/agent/fallback";
 
 export const AGENT_MODEL = "openai/gpt-4.1-mini";
 const MEMORY_WINDOW_MS = 30 * 60_000;
@@ -63,15 +64,25 @@ export async function runWhatsAppAgent(clubId: string, rawPhone: string, text: s
   const history = await recentHistory(clubId, ctx.phone);
   await logActivity(prisma, { clubId, action: "WA_IN", entity: "WhatsApp", entityId: ctx.phone, meta: { text, memberId: ctx.member?.id ?? null } });
 
-  const { text: reply } = await generateText({
-    model: AGENT_MODEL,
-    system: systemPrompt(ctx),
-    messages: [...history, { role: "user", content: text }],
-    tools: makeTools(ctx),
-    stopWhen: isStepCount(5),
-  });
+  let out: string;
+  let engine: "model" | "rules" = "model";
+  try {
+    const { text: reply } = await generateText({
+      model: AGENT_MODEL,
+      system: systemPrompt(ctx),
+      messages: [...history, { role: "user", content: text }],
+      tools: makeTools(ctx),
+      stopWhen: isStepCount(5),
+    });
+    out = reply.trim() || (await runRuleBasedAgent(ctx, text));
+  } catch (err) {
+    // Gateway down, no credentials, quota: degrade to the deterministic desk
+    // so a member on WhatsApp still gets a booking, never a stack trace.
+    console.error("[whatsapp agent] model unavailable, using rule-based desk:", err instanceof Error ? err.message : err);
+    engine = "rules";
+    out = await runRuleBasedAgent(ctx, text);
+  }
 
-  const out = reply.trim() || "Sorry, I didn't catch that. You can ask me to check availability, book, or cancel a court.";
-  await logActivity(prisma, { clubId, action: "WA_OUT", entity: "WhatsApp", entityId: ctx.phone, meta: { text: out } });
+  await logActivity(prisma, { clubId, action: "WA_OUT", entity: "WhatsApp", entityId: ctx.phone, meta: { text: out, engine } });
   return out;
 }

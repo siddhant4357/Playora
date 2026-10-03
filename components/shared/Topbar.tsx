@@ -27,13 +27,15 @@ interface TopbarProps {
   onToggleSidebar: () => void;
 }
 
-function getInitials(name: string): string {
-  return name
+function getInitials(name: string | null | undefined): string {
+  const initials = (name ?? "")
     .split(" ")
+    .filter(Boolean)
     .map((n) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  return initials || "?";
 }
 
 export function Topbar({ user, onOpenPalette, sidebarOpen, onToggleSidebar }: TopbarProps) {

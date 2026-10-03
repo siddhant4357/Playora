@@ -62,7 +62,33 @@ interface GridOptions {
 }
 
 export async function getSlotGrid(opts: GridOptions): Promise<SlotGrid> {
+  const [grid] = await getSlotGrids({ ...opts, dateKeys: [opts.dateKey] });
+  return grid;
+}
+
+type MultiDayOptions = Omit<GridOptions, "dateKey"> & { dateKeys: string[] };
+
+const bookingSelect = {
+  id: true,
+  courtId: true,
+  startsAt: true,
+  endsAt: true,
+  kind: true,
+  memberId: true,
+  walkInName: true,
+  checkedInAt: true,
+  priceCharged: true,
+  member: { select: { firstName: true, lastName: true } },
+} as const;
+
+/**
+ * Builds grids for several days with one round of reads: club + courts + plan
+ * in parallel, then a single bookings query spanning the whole window.
+ * Round-trip count stays constant no matter how many days are requested.
+ */
+export async function getSlotGrids(opts: MultiDayOptions): Promise<SlotGrid[]> {
   const now = opts.now ?? new Date();
+  if (opts.dateKeys.length === 0) return [];
 
   const [club, courts, plan] = await Promise.all([
     prisma.club.findUniqueOrThrow({
@@ -85,7 +111,6 @@ export async function getSlotGrid(opts: GridOptions): Promise<SlotGrid> {
 
   const policy = policyFrom(club.settings);
   const tz = club.timezone;
-  const start = dayStart(opts.dateKey, tz);
   const openMin = hhmmToMinutes(club.opensAt);
   const closeMin = hhmmToMinutes(club.closesAt);
 
@@ -94,28 +119,55 @@ export async function getSlotGrid(opts: GridOptions): Promise<SlotGrid> {
     times.push({ minuteOfDay: m, label: minutesToLabel(m) });
   }
 
-  const dayEnd = new Date(start.getTime() + 24 * 60 * 60_000);
-  const bookings = await prisma.booking.findMany({
+  const dayStarts = opts.dateKeys.map((k) => dayStart(k, tz));
+  const windowStart = new Date(Math.min(...dayStarts.map((d) => d.getTime())));
+  const windowEnd = new Date(Math.max(...dayStarts.map((d) => d.getTime())) + 24 * 60 * 60_000);
+  const allBookings = await prisma.booking.findMany({
     where: {
       clubId: opts.clubId,
       courtId: { in: courts.map((c) => c.id) },
       status: { in: ["CONFIRMED", "COMPLETED"] },
-      startsAt: { lt: dayEnd },
-      endsAt: { gt: start },
+      startsAt: { lt: windowEnd },
+      endsAt: { gt: windowStart },
     },
-    select: {
-      id: true,
-      courtId: true,
-      startsAt: true,
-      endsAt: true,
-      kind: true,
-      memberId: true,
-      walkInName: true,
-      checkedInAt: true,
-      priceCharged: true,
-      member: { select: { firstName: true, lastName: true } },
-    },
+    select: bookingSelect,
   });
+
+  return opts.dateKeys.map((dateKey, i) => {
+    const start = dayStarts[i];
+    const dayEnd = new Date(start.getTime() + 24 * 60 * 60_000);
+    const bookings = allBookings.filter((b) => b.startsAt < dayEnd && b.endsAt > start);
+    return buildDayGrid({ ...opts, dateKey }, { tz, policy, times, start, courts, plan, bookings, now });
+  });
+}
+
+type DayBooking = {
+  id: string;
+  courtId: string;
+  startsAt: Date;
+  endsAt: Date;
+  kind: BookingKind;
+  memberId: string | null;
+  walkInName: string | null;
+  checkedInAt: Date | null;
+  priceCharged: number;
+  member: { firstName: string; lastName: string } | null;
+};
+
+function buildDayGrid(
+  opts: GridOptions,
+  ctx: {
+    tz: string;
+    policy: ReturnType<typeof policyFrom>;
+    times: SlotGrid["times"];
+    start: Date;
+    courts: Awaited<ReturnType<typeof prisma.court.findMany<{ include: { pricing: true } }>>>;
+    plan: Awaited<ReturnType<typeof prisma.membershipPlan.findUnique>>;
+    bookings: DayBooking[];
+    now: Date;
+  },
+): SlotGrid {
+  const { tz, policy, times, start, courts, plan, bookings, now } = ctx;
 
   const rows: CourtRow[] = courts.map((court) => {
     const courtBookings = bookings.filter((b) => b.courtId === court.id);

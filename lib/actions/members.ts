@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { optionalPhoneSchema, phoneSchema } from "@/lib/validation/phone";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { AuthError, requireRole } from "@/lib/auth";
@@ -27,7 +28,7 @@ const STAFF = ["FRONT_DESK", "MANAGER", "OWNER"] as const;
 const RegisterSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
-  phone: z.string().trim().min(8, "Phone looks too short"),
+  phone: phoneSchema,
   email: z.string().trim().email("Invalid email").or(z.literal("")).optional(),
   dateOfBirth: z.string().optional(),
   emergencyContact: z.string().trim().optional(),
@@ -164,7 +165,7 @@ export async function renewMembershipAction(input: z.input<typeof RenewSchema>):
   }
 }
 
-// ───────────────────────── Freeze / status ─────────────────────────
+// ───────────────────────── Freeze / status ───────────────────���─────
 
 export async function setMemberStatusAction(input: { memberId: string; status: "ACTIVE" | "FROZEN" | "CANCELLED" }): Promise<ActionResult> {
   try {
@@ -263,7 +264,7 @@ export async function checkInAction(input: { token: string; method?: "QR" | "MAN
 // ───────────────────────── Member self-service profile ─────────────────────────
 
 const SelfProfileSchema = z.object({
-  phone: z.string().trim().min(8).optional(),
+  phone: optionalPhoneSchema,
   emergencyContact: z.string().trim().optional(),
   skillRating: z.coerce.number().int().min(1).max(5).optional(),
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
@@ -103,7 +104,11 @@ export function ShopCatalogue({ products, member }: Props) {
           {visible.map((p) => (
             <article className="prod" key={p.id}>
               <Link href={`/shop/${p.sku}`} className="img" aria-label={`View ${p.name}`}>
-                {p.imageUrl ? <img src={p.imageUrl} alt="" /> : <span aria-hidden="true">{p.name.slice(0, 2).toUpperCase()}</span>}
+                {p.imageUrl ? (
+                  <Image src={p.imageUrl} alt="" width={480} height={360} sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" />
+                ) : (
+                  <span aria-hidden="true">{p.name.slice(0, 2).toUpperCase()}</span>
+                )}
               </Link>
               <div className="bd">
                 <span className="cat">{CATEGORY_LABEL[p.category] ?? p.category}</span>

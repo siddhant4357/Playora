@@ -40,6 +40,33 @@ export async function getTab(clubId: string, tabId: string) {
 
 export type TabDetail = NonNullable<Awaited<ReturnType<typeof getTab>>>;
 
+/** A member's own tabs: the one running now (if any) plus recent settled ones. */
+export async function getMemberTabs(memberId: string) {
+  const [open, history] = await Promise.all([
+    prisma.barTab.findFirst({
+      where: { memberId, status: "OPEN" },
+      orderBy: { openedAt: "desc" },
+      include: {
+        table: { select: { name: true } },
+        items: { where: { voidReason: null }, orderBy: { sentToKitchenAt: "asc" } },
+      },
+    }),
+    prisma.barTab.findMany({
+      where: { memberId, status: "SETTLED" },
+      orderBy: { settledAt: "desc" },
+      take: 12,
+      include: {
+        table: { select: { name: true } },
+        items: { where: { voidReason: null }, select: { name: true, qty: true } },
+        payments: { select: { mode: true, amount: true } },
+      },
+    }),
+  ]);
+  return { open, history };
+}
+export type MemberOpenTab = NonNullable<Awaited<ReturnType<typeof getMemberTabs>>["open"]>;
+export type MemberSettledTab = Awaited<ReturnType<typeof getMemberTabs>>["history"][number];
+
 export async function getKitchenTickets(clubId: string) {
   const items = await prisma.barTabItem.findMany({
     where: { tab: { clubId, status: "OPEN" }, needsKitchen: true, kitchenStatus: { in: ["NEW", "PREPARING", "READY"] } },

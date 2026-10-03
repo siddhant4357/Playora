@@ -80,6 +80,8 @@ export default async function MemberHomePage() {
         <Shortcut href="/me/book" title="Book a court" sub="Live availability" />
         <Shortcut href="/me/shop" title="Pro shop" sub="Click & collect" />
         <Shortcut href="/me/bookings" title="My bookings" sub="Upcoming & past" />
+        <Shortcut href="/me/tab" title="My tab" sub="Bar & cafeteria" />
+        <Shortcut href="/me/orders" title="My orders" sub="Track shop orders" />
         <Shortcut href="/me/profile" title="Profile" sub="Plan & payments" />
       </nav>
     </div>

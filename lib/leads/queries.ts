@@ -1,7 +1,7 @@
 import "server-only";
 import type { LeadStage } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
-import { getSlotGrid } from "@/lib/booking/slots";
+import { getSlotGrids } from "@/lib/booking/slots";
 import { addDaysToKey, todayKey, toLocalParts } from "@/lib/time";
 
 export const leadCardSelect = {
@@ -95,7 +95,7 @@ export async function getFreeThisWeek(clubId: string, opts: { days?: number; per
   const nowMin = nowMinuteOfDay(tz);
   const start = todayKey(tz);
   const keys = Array.from({ length: days }, (_, i) => addDaysToKey(start, i));
-  const grids = await Promise.all(keys.map((dateKey) => getSlotGrid({ clubId, dateKey })));
+  const grids = await getSlotGrids({ clubId, dateKeys: keys });
 
   const out: FreeSlotCard[] = [];
   const fmtDay = new Intl.DateTimeFormat("en-IN", { weekday: "short", timeZone: tz });

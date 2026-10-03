@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { phoneSchema } from "@/lib/validation/phone";
 import { AuthError, requireRole } from "@/lib/auth";
 import { KernelError } from "@/lib/kernel";
 import { BookingError } from "@/lib/booking/engine";
@@ -27,7 +28,7 @@ function touch(leadId?: string) {
 
 const NewLeadSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
-  phone: z.string().trim().min(8, "Phone looks too short"),
+  phone: phoneSchema,
   email: z.string().trim().email("Invalid email").or(z.literal("")).optional(),
   interest: z.enum(LEAD_INTERESTS).optional(),
   source: z.enum(LEAD_SOURCES).default("WALK_IN"),
