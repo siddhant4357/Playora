@@ -570,7 +570,7 @@ async function seedPayables(clubId: string, userId: string) {
   return 6;
 }
 
-// ───────────────────────── HR (employees, rota, attendance, leave) ────────────��────────────
+// ───────────────────────── HR (employees, rota, attendance, leave) ────────────���────────────
 
 const STAFF_PROFILES: Record<string, { designation: string; department: string; employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"; salary: number; hourlyRate?: number }> = {
   OWNER: { designation: "Owner", department: "Management", employmentType: "FULL_TIME", salary: 0 },
@@ -758,6 +758,56 @@ async function seedCoaching(clubId: string, tz: string, coachId: string, courts:
   return { sessions, notes: completed.length };
 }
 
+/**
+ * Real bar tabs for the demo member (Aditya, CC-0001) through the bar engine,
+ * so stock moves, ledger posts and tab numbers are all genuine: three settled
+ * tabs over the last fortnight and one open tab with food still in the kitchen.
+ * Idempotent: skips when the member already has any tab.
+ */
+async function seedMemberTabs(clubId: string, memberId: string, byUserId: string) {
+  const existing = await prisma.barTab.count({ where: { memberId } });
+  if (existing > 0) return 0;
+
+  const { openTab, addItems, settleTab, advanceKitchen } = await import("../lib/bar/engine");
+  const sku = async (code: string) => (await prisma.product.findFirstOrThrow({ where: { clubId, sku: code }, select: { id: true } })).id;
+  // openTab reuses an existing open tab on a table, so pick one that is free.
+  const table = await prisma.barTable.findFirst({ where: { clubId, tabs: { none: { status: "OPEN" } } }, orderBy: { name: "asc" }, select: { id: true } });
+  const now = Date.now();
+
+  const settled: Array<{ daysAgo: number; lines: Array<[string, number]>; mode: "UPI" | "CARD" | "CASH" }> = [
+    { daysAgo: 12, lines: [["BEV-CAP", 2], ["FOOD-CLUB", 1]], mode: "UPI" },
+    { daysAgo: 6, lines: [["BEV-LIME", 2], ["FOOD-FRIES", 1], ["BEV-WATER", 1]], mode: "CARD" },
+    { daysAgo: 2, lines: [["BEV-CLD", 1], ["FOOD-BOWL", 1], ["FOOD-BROWN", 1]], mode: "UPI" },
+  ];
+
+  for (const s of settled) {
+    // Tables are released on settle, so a table-less tab avoids clashing with live POS state.
+    const tabId = await openTab({ clubId, tableId: null, memberId, source: "POS", byUserId });
+    const lines: { productId: string; qty: number }[] = [];
+    for (const [code, qty] of s.lines) lines.push({ productId: await sku(code), qty });
+    await addItems({ clubId, tabId, lines, byUserId });
+    const fresh = await prisma.barTab.findUniqueOrThrow({ where: { id: tabId }, select: { total: true, items: { select: { id: true } } } });
+    for (const it of fresh.items) await advanceKitchen({ clubId, itemId: it.id, to: "SERVED" });
+    await settleTab({ clubId, tabId, payments: [{ mode: s.mode, amount: fresh.total }], byUserId });
+    const at = new Date(now - s.daysAgo * 86_400_000 + 13 * 3_600_000);
+    await prisma.barTab.update({ where: { id: tabId }, data: { openedAt: new Date(at.getTime() - 50 * 60_000), settledAt: at } });
+  }
+
+  const openId = await openTab({ clubId, tableId: table?.id ?? null, memberId, source: "QR", byUserId });
+  const openLines: { productId: string; qty: number; modifiers?: string[] }[] = [
+    { productId: await sku("BEV-ESP"), qty: 1, modifiers: ["Double shot"] },
+    { productId: await sku("FOOD-PANEER"), qty: 1, modifiers: ["Extra mint chutney"] },
+    { productId: await sku("BEV-WATER"), qty: 2 },
+  ];
+  await addItems({ clubId, tabId: openId, lines: openLines, byUserId });
+  const served = await prisma.barTabItem.findFirst({ where: { tabId: openId, needsKitchen: false }, select: { id: true } });
+  if (served) await advanceKitchen({ clubId, itemId: served.id, to: "SERVED" });
+  const cooking = await prisma.barTabItem.findFirst({ where: { tabId: openId, needsKitchen: true }, select: { id: true } });
+  if (cooking) await advanceKitchen({ clubId, itemId: cooking.id, to: "PREPARING" });
+
+  return settled.length + 1;
+}
+
 async function main() {
   console.log("Seeding Playora…");
 
@@ -806,6 +856,12 @@ async function main() {
   const coach = users.find((u) => u.role === "COACH")!;
   const coaching = await seedCoaching(club.id, club.timezone, coach.id, courts, members);
   console.log(`  coaching ${coaching.sessions} sessions, ${coaching.notes} player notes`);
+
+  const demoMember = await prisma.member.findFirst({ where: { clubId: club.id, memberCode: "CC-0001" }, select: { id: true } });
+  if (demoMember) {
+    const tabs = await seedMemberTabs(club.id, demoMember.id, owner.id);
+    console.log(`  member tabs ${tabs}`);
+  }
 
   await seedActivity(club.id, owner.id);
 

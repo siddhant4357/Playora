@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getMemberOrders, getMemberShopContext } from "@/lib/shop/queries";
 import { Button } from "@/components/ui/button";
 import { OrderTracker } from "@/components/shop/OrderTracker";
+import { NoMemberProfile } from "@/components/member/NoMemberProfile";
 
 export const metadata: Metadata = { title: "My orders" };
 
@@ -13,7 +14,7 @@ export default async function MemberOrdersPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?callbackUrl=%2Fme%2Forders");
   const ctx = await getMemberShopContext(user.userId);
-  if (!ctx?.member) redirect("/me/shop");
+  if (!ctx?.member) return <NoMemberProfile feature="your orders" />;
   const orders = await getMemberOrders(ctx.member.id);
   const live = orders.filter((o) => !["COMPLETED", "CANCELLED"].includes(o.status));
   const past = orders.filter((o) => ["COMPLETED", "CANCELLED"].includes(o.status));
