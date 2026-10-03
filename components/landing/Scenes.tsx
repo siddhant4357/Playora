@@ -16,7 +16,7 @@ function BookingScene() {
   return (
     <section className="l-container feat fu" id="booking" aria-labelledby="booking-title">
       <div className="feat-copy">
-        <span className="eyebrow">Scene B · The booking</span>
+        <span className="eyebrow">The booking</span>
         <h2 id="booking-title">
           A court that <span className="hl">cannot</span> be double-booked.
         </h2>
@@ -89,7 +89,7 @@ function MemberScene() {
   return (
     <section className="l-container feat flip fu" id="members" aria-labelledby="member-title">
       <div className="feat-copy">
-        <span className="eyebrow">Scene A · The member</span>
+        <span className="eyebrow">The member</span>
         <h2 id="member-title">
           Every member is <span className="hl">one record</span>, not five.
         </h2>
@@ -160,7 +160,7 @@ function BarShopScene() {
   return (
     <section className="l-container feat fu" id="bar" aria-labelledby="bar-title">
       <div className="feat-copy">
-        <span className="eyebrow">Scenes C &amp; D · Shop and bar</span>
+        <span className="eyebrow">Shop and bar</span>
         <h2 id="bar-title">
           Bar, shop and courts on <span className="hl">one ledger</span>.
         </h2>

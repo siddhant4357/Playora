@@ -53,7 +53,7 @@ export default async function Member360Page({ params }: { params: Promise<{ id: 
         }
         actions={
           <>
-            <Button variant="outline" render={<Link href={`/desk?member=${m.id}`} />}>
+            <Button variant="outline" nativeButton={false} render={<Link href={`/desk?member=${m.id}`} />}>
               Book a court
             </Button>
             <MemberActions memberId={m.id} status={m.status} currentPlanId={m.planId} creditBalance={m.creditBalance} plans={plans.map((p) => ({ id: p.id, name: p.name, priceMonthly: p.priceMonthly, priceYearly: p.priceYearly }))} canManage={canManage} />
@@ -117,7 +117,7 @@ export default async function Member360Page({ params }: { params: Promise<{ id: 
 
         <div className="flex flex-col gap-4">
           <Panel title="Member pass">
-            <MemberQr token={`playora:${m.qrToken}`} code={m.memberCode} name={`${m.firstName} ${m.lastName}`} />
+            <MemberQr token={m.qrToken} code={m.memberCode} name={`${m.firstName} ${m.lastName}`} />
           </Panel>
           <Panel title="Details">
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">

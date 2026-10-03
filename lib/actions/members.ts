@@ -210,7 +210,7 @@ export async function checkInAction(input: { token: string; method?: "QR" | "MAN
   try {
     const user = await requireRole(...STAFF);
     const raw = input.token.trim();
-    const qrToken = raw.startsWith("playora:") ? raw.slice(6) : null;
+    const qrToken = raw.includes("/ci/") ? raw.split("/ci/")[1] : raw.startsWith("playora:") ? raw.slice(8) : null;
 
     const member = await prisma.member.findFirst({
       where: {

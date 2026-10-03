@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { QrCode } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,12 @@ type Member = {
 
 export function MemberCard({ member, qrToken }: { member: Member; qrToken: string }) {
   const [open, setOpen] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
   const days = member.expiryDate ? Math.ceil((member.expiryDate.getTime() - Date.now()) / 86_400_000) : null;
   const tone = days === null ? null : days < 0 ? "Expired" : days <= 14 ? `${days} days left` : `Valid till ${member.expiryDate!.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`;
 
@@ -43,7 +49,7 @@ export function MemberCard({ member, qrToken }: { member: Member; qrToken: strin
           )}
         </span>
         <span className="flex shrink-0 items-center justify-center rounded-xl bg-white p-2">
-          <QRCodeSVG value={`playora:${qrToken}`} size={64} fgColor="#20121d" />
+          {origin ? <QRCodeSVG value={`${origin}/ci/${qrToken}`} size={64} fgColor="#20121d" /> : <div style={{ width: 64, height: 64 }} />}
         </span>
       </button>
 
@@ -56,7 +62,7 @@ export function MemberCard({ member, qrToken }: { member: Member; qrToken: strin
             <DialogDescription>Front desk scans it to check you in and link today&apos;s booking.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-6">
-            <QRCodeSVG value={`playora:${qrToken}`} size={240} level="M" fgColor="#20121d" />
+            {origin ? <QRCodeSVG value={`${origin}/ci/${qrToken}`} size={240} level="M" fgColor="#20121d" /> : <div style={{ width: 240, height: 240 }} />}
             <span className="font-mono text-lg font-semibold tracking-widest" style={{ color: "#20121d" }}>
               {member.memberCode}
             </span>

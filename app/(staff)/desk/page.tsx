@@ -41,13 +41,13 @@ export default async function DeskHomePage({ searchParams }: PageProps) {
           </p>
         </div>
         <nav className="flex items-center gap-1" aria-label="Change day">
-          <Button variant="outline" size="icon" aria-label="Previous day" render={<Link href={`/desk?date=${addDaysToKey(dateKey, -1)}`} />}>
+          <Button variant="outline" size="icon" aria-label="Previous day" nativeButton={false} render={<Link href={`/desk?date=${addDaysToKey(dateKey, -1)}`} />}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" render={<Link href="/desk" />} disabled={summary.isToday}>
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/desk" />} disabled={summary.isToday}>
             Today
           </Button>
-          <Button variant="outline" size="icon" aria-label="Next day" render={<Link href={`/desk?date=${addDaysToKey(dateKey, 1)}`} />}>
+          <Button variant="outline" size="icon" aria-label="Next day" nativeButton={false} render={<Link href={`/desk?date=${addDaysToKey(dateKey, 1)}`} />}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </nav>

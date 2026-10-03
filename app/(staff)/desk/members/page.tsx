@@ -25,7 +25,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
         title="Members"
         subtitle={`${counts.byStatus.ACTIVE ?? 0} active · ${counts.expiring} expiring in 14 days · ${counts.byStatus.TRIAL ?? 0} on trial`}
         actions={
-          <Button render={<Link href="/desk/members/new" />}>
+          <Button nativeButton={false} render={<Link href="/desk/members/new" />}>
             <UserPlus className="h-4 w-4" /> Register member
           </Button>
         }
