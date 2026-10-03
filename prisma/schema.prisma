@@ -86,6 +86,11 @@ model Club {
   invoices     Invoice[]
   payables     Payable[]
   reportShares ReportShare[]
+  employees    Employee[]
+  staffShifts  StaffShift[]
+  attendance   Attendance[]
+  leaves       LeaveRequest[]
+  payrollRuns  PayrollRun[]
 
   @@map("clubs")
 }
@@ -118,6 +123,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   createdBookings     Booking[]     @relation("BookingCreatedBy")
   transactions        Transaction[]
+  employee            Employee?
 
   @@index([clubId, role])
   @@map("users")
@@ -436,6 +442,7 @@ model Transaction {
   booking     Booking?
   invoice     Invoice?
   payable     Payable?
+  payrollRun  PayrollRun?
 
   @@index([clubId, createdAt])
   @@index([clubId, source])
@@ -1001,6 +1008,182 @@ model ReportShare {
 
   @@index([token])
   @@map("report_shares")
+}
+
+// ───────────────────────── HR (Phase 7) ─────────────────────────
+// One Employee per staff login. Salary is monthly paise; rota rows are
+// planned shifts, Attendance rows are actual clock in/out. Payroll freezes
+// the month into Payslips and posts a single PAYROLL OUT to the ledger.
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  EARNED
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+model Employee {
+  id             String         @id @default(cuid())
+  hashId         Int            @unique @default(autoincrement())
+  clubId         String
+  club           Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  userId         String         @unique
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  employeeNo     String
+  designation    String
+  department     String         // "Front desk" | "Bar" | "Kitchen" | "Coaching" | "Management"
+  employmentType EmploymentType @default(FULL_TIME)
+  joinedOn       DateTime
+  leftOn         DateTime?
+
+  monthlySalary  Int            // paise
+  hourlyRate     Int?           // paise; used for PART_TIME overtime
+  leaveBalance   Int            @default(12) // days remaining this year
+  bankAccount    String?
+  ifsc           String?
+  pan            String?
+
+  shifts         StaffShift[]
+  attendance     Attendance[]
+  leaves         LeaveRequest[]
+  payslips       Payslip[]
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([clubId, employeeNo])
+  @@index([clubId, department])
+  @@map("employees")
+}
+
+model StaffShift {
+  id         String   @id @default(cuid())
+  clubId     String
+  club       Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       String   // YYYY-MM-DD club-local
+  startMin   Int      // minutes from midnight
+  endMin     Int
+  area       String   // "Front desk" | "Bar" | "Kitchen" | "Courts"
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  @@unique([employeeId, date, startMin])
+  @@index([clubId, date])
+  @@map("staff_shifts")
+}
+
+model Attendance {
+  id         String    @id @default(cuid())
+  clubId     String
+  club       Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       String    // YYYY-MM-DD club-local
+  clockIn    DateTime
+  clockOut   DateTime?
+  minutes    Int?      // computed at clock-out
+  source     String    @default("DESK") // DESK | QR | MANUAL
+  createdAt  DateTime  @default(now())
+
+  @@index([clubId, date])
+  @@index([employeeId, date])
+  @@map("attendance")
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  hashId       Int         @unique @default(autoincrement())
+  clubId       String
+  club         Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  employeeId   String
+  employee     Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type         LeaveType
+  fromDate     String      // YYYY-MM-DD
+  toDate       String
+  days         Int
+  reason       String?
+  status       LeaveStatus @default(PENDING)
+  decidedById  String?
+  decidedAt    DateTime?
+  decisionNote String?
+  createdAt    DateTime    @default(now())
+
+  @@index([clubId, status])
+  @@index([employeeId, fromDate])
+  @@map("leave_requests")
+}
+
+model PayrollRun {
+  id            String        @id @default(cuid())
+  hashId        Int           @unique @default(autoincrement())
+  clubId        String
+  club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  period        String        // YYYY-MM
+  status        PayrollStatus @default(DRAFT)
+  gross         Int
+  deductions    Int
+  net           Int
+  headcount     Int
+  approvedById  String?
+  approvedAt    DateTime?
+  paidAt        DateTime?
+  paymentMode   PaymentMode?
+  transactionId String?       @unique
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id])
+  payslips      Payslip[]
+  createdById   String
+  createdAt     DateTime      @default(now())
+
+  @@unique([clubId, period])
+  @@map("payroll_runs")
+}
+
+model Payslip {
+  id            String     @id @default(cuid())
+  hashId        Int        @unique @default(autoincrement())
+  runId         String
+  run           PayrollRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  employeeId    String
+  employee      Employee   @relation(fields: [employeeId], references: [id])
+  slipNo        String
+  daysInMonth   Int
+  daysWorked    Int
+  paidLeaveDays Int
+  unpaidDays    Int
+  overtimeMin   Int        @default(0)
+  basic         Int        // paise, pro-rated
+  overtime      Int        @default(0)
+  gross         Int
+  pf            Int        @default(0)
+  tds           Int        @default(0)
+  deductions    Int
+  net           Int
+  createdAt     DateTime   @default(now())
+
+  @@unique([runId, employeeId])
+  @@map("payslips")
 }
 
 model PasswordResetToken {

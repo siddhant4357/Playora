@@ -563,6 +563,111 @@ async function seedPayables(clubId: string, userId: string) {
   return 6;
 }
 
+// ───────────────────────── HR (employees, rota, attendance, leave) ─────────────────────────
+
+const STAFF_PROFILES: Record<string, { designation: string; department: string; employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"; salary: number; hourlyRate?: number }> = {
+  OWNER: { designation: "Owner", department: "Management", employmentType: "FULL_TIME", salary: 0 },
+  MANAGER: { designation: "Club manager", department: "Management", employmentType: "FULL_TIME", salary: 6500000 },
+  FRONT_DESK: { designation: "Front desk executive", department: "Front desk", employmentType: "FULL_TIME", salary: 2800000 },
+  BAR_STAFF: { designation: "Bartender", department: "Bar", employmentType: "FULL_TIME", salary: 2400000 },
+  KITCHEN: { designation: "Line cook", department: "Kitchen", employmentType: "PART_TIME", salary: 1800000, hourlyRate: 15000 },
+  COACH: { designation: "Head coach · Badminton", department: "Coaching", employmentType: "CONTRACT", salary: 5500000 },
+};
+
+async function seedHr(clubId: string, tz: string, users: { id: string; role: Role }[]) {
+  const existing = await prisma.employee.count({ where: { clubId } });
+  if (existing > 0) return existing;
+
+  const rand = rng(777);
+  const now = new Date();
+  const todayParts = toLocalParts(now, tz);
+  const today = `${todayParts.year}-${String(todayParts.month).padStart(2, "0")}-${String(todayParts.day).padStart(2, "0")}`;
+  const dayKey = (offset: number) => {
+    const d = new Date(`${today}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const staff = users.filter((u) => u.role !== "MEMBER" && u.role !== "OWNER");
+  const employees = [];
+  let n = 1;
+  for (const u of staff) {
+    const p = STAFF_PROFILES[u.role];
+    employees.push(
+      await prisma.employee.create({
+        data: {
+          clubId,
+          userId: u.id,
+          employeeNo: `EMP-${String(n++).padStart(3, "0")}`,
+          designation: p.designation,
+          department: p.department,
+          employmentType: p.employmentType,
+          joinedOn: new Date(now.getFullYear() - 1, (n * 2) % 12, 1),
+          monthlySalary: p.salary,
+          hourlyRate: p.hourlyRate ?? null,
+          leaveBalance: 8 + Math.floor(rand() * 5),
+        },
+      }),
+    );
+  }
+
+  // Rota: last 5 weeks + next week. Attendance only for past days.
+  const shiftFor = (dept: string): { start: number; end: number; area: string } => {
+    switch (dept) {
+      case "Bar":
+        return { start: 15 * 60, end: 23 * 60, area: "Bar" };
+      case "Kitchen":
+        return { start: 16 * 60, end: 22 * 60 + 30, area: "Kitchen" };
+      case "Coaching":
+        return { start: 6 * 60, end: 11 * 60, area: "Courts" };
+      case "Management":
+        return { start: 10 * 60, end: 19 * 60, area: "Front desk" };
+      default:
+        return { start: 7 * 60, end: 16 * 60, area: "Front desk" };
+    }
+  };
+
+  const shifts: Prisma.StaffShiftCreateManyInput[] = [];
+  const attendance: Prisma.AttendanceCreateManyInput[] = [];
+  for (let offset = -35; offset <= 7; offset++) {
+    const date = dayKey(offset);
+    const dow = new Date(`${date}T00:00:00Z`).getUTCDay();
+    if (dow === 0) continue; // weekly off
+    for (const e of employees) {
+      const s = shiftFor(e.department);
+      shifts.push({ clubId, employeeId: e.id, date, startMin: s.start, endMin: s.end, area: s.area });
+      if (offset < 0 && rand() > 0.07) {
+        const inAt = localToUtc(tz, +date.slice(0, 4), +date.slice(5, 7), +date.slice(8, 10), Math.floor(s.start / 60), s.start % 60 + Math.floor(rand() * 12));
+        const lateMin = rand() < 0.2 ? Math.floor(rand() * 90) : 0;
+        const outAt = new Date(inAt.getTime() + (s.end - s.start + lateMin) * 60_000);
+        attendance.push({ clubId, employeeId: e.id, date, clockIn: inAt, clockOut: outAt, minutes: Math.round((outAt.getTime() - inAt.getTime()) / 60_000) });
+      }
+    }
+  }
+  await prisma.staffShift.createMany({ data: shifts, skipDuplicates: true });
+  await prisma.attendance.createMany({ data: attendance });
+
+  // Clock the bartender in right now so "on duty" is non-empty in the demo.
+  const bar = employees.find((e) => e.department === "Bar");
+  if (bar && new Date().getUTCDay() !== 0) {
+    await prisma.attendance.create({ data: { clubId, employeeId: bar.id, date: today, clockIn: new Date(Date.now() - 95 * 60_000) } });
+  }
+
+  const desk = employees.find((e) => e.department === "Front desk")!;
+  const cook = employees.find((e) => e.department === "Kitchen")!;
+  const coach = employees.find((e) => e.department === "Coaching")!;
+  await prisma.leaveRequest.createMany({
+    data: [
+      { clubId, employeeId: desk.id, type: "CASUAL", fromDate: dayKey(5), toDate: dayKey(6), days: 2, reason: "Cousin's wedding in Pune", status: "PENDING" },
+      { clubId, employeeId: cook.id, type: "SICK", fromDate: dayKey(-9), toDate: dayKey(-8), days: 2, reason: "Fever", status: "APPROVED", decidedAt: new Date(now.getTime() - 9 * 86_400_000) },
+      { clubId, employeeId: coach.id, type: "UNPAID", fromDate: dayKey(12), toDate: dayKey(18), days: 7, reason: "State-level tournament officiating", status: "PENDING" },
+      { clubId, employeeId: desk.id, type: "EARNED", fromDate: dayKey(-25), toDate: dayKey(-23), days: 3, status: "APPROVED", decidedAt: new Date(now.getTime() - 26 * 86_400_000) },
+    ],
+  });
+
+  return employees.length;
+}
+
 async function main() {
   console.log("Seeding Yolla…");
 
@@ -604,6 +709,9 @@ async function main() {
 
   const payables = await seedPayables(club.id, owner.id);
   console.log(`  payables ${payables}`);
+
+  const employees = await seedHr(club.id, club.timezone, users);
+  console.log(`  employees ${employees} (+ rota, attendance, leave)`);
 
   await seedActivity(club.id, owner.id);
 
