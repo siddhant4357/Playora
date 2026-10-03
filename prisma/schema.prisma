@@ -60,11 +60,20 @@ model Club {
   opensAt   String   @default("06:00")
   closesAt  String   @default("23:00")
 
+  // Policy knobs: cancellation window, credit %, advance days, etc.
+  settings  Json     @default("{}")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   users        User[]
   activityLogs ActivityLog[]
+  plans        MembershipPlan[]
+  members      Member[]
+  courts       Court[]
+  bookings     Booking[]
+  waitlist     Waitlist[]
+  transactions Transaction[]
 
   @@map("clubs")
 }
@@ -86,14 +95,326 @@ model User {
   dob          DateTime?
   gender       String?
 
+  // A MEMBER login points at its contact record. Staff users have none.
+  memberId     String?  @unique
+  member       Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   activityLogs        ActivityLog[]
   passwordResetTokens PasswordResetToken[]
+  createdBookings     Booking[]     @relation("BookingCreatedBy")
+  transactions        Transaction[]
 
   @@index([clubId, role])
   @@map("users")
+}
+
+// ───────────────────────── Plans & Members ─────────────────────────
+
+enum PlanTier {
+  GOLD
+  SILVER
+  JUNIOR
+}
+
+model MembershipPlan {
+  id                  String   @id @default(cuid())
+  hashId              Int      @unique @default(autoincrement())
+  clubId              String
+  club                Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  tier                PlanTier
+  name                String
+  priceMonthly        Int      // paise
+  priceYearly         Int      // paise
+  courtDiscountPct    Int      @default(0) // 100 = free courts
+  shopDiscountPct     Int      @default(0)
+  barDiscountPct      Int      @default(0)
+  maxBookingsPerDay   Int      @default(2)
+  advanceBookingDays  Int      @default(7)
+  guestPassesPerMonth Int      @default(0)
+  benefits            String[] @default([])
+  isActive            Boolean  @default(true)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  members             Member[]
+
+  @@unique([clubId, tier])
+  @@map("membership_plans")
+}
+
+enum MemberStatus {
+  LEAD
+  TRIAL
+  ACTIVE
+  EXPIRED
+  FROZEN
+  CANCELLED
+}
+
+// Member is the single contact record (Odoo res.partner). Bookings,
+// transactions, tabs and orders all hang off it.
+model Member {
+  id               String       @id @default(cuid())
+  hashId           Int          @unique @default(autoincrement())
+  clubId           String
+  club             Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  memberCode       String       @unique // CC-0001, printed on QR
+  firstName        String
+  lastName         String
+  phone            String
+  email            String?
+  dateOfBirth      DateTime?
+  gender           String?
+  photoUrl         String?
+  emergencyContact String?
+
+  status           MemberStatus @default(LEAD)
+  planId           String?
+  plan             MembershipPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  startDate        DateTime?
+  expiryDate       DateTime?
+  autoRenew        Boolean      @default(false)
+
+  skillRating      Int          @default(3) // 1-5, for social play matchmaking
+  notes            String?
+  tags             String[]     @default([])
+  qrToken          String       @unique @default(cuid())
+  creditBalance    Int          @default(0) // paise, from cancellations
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  user             User?
+  bookings         Booking[]
+  waitlist         Waitlist[]
+  transactions     Transaction[]
+
+  @@index([clubId, phone])
+  @@index([clubId, status])
+  @@map("members")
+}
+
+// ───────────────────────── Courts & Booking ─────────────────────────
+
+enum CourtType {
+  TENNIS
+  CRICKET
+  BADMINTON
+  PADEL
+  PICKLEBALL
+}
+
+enum CourtSurface {
+  HARD
+  CLAY
+  GRASS
+  SYNTHETIC
+  INDOOR
+}
+
+model Court {
+  id        String       @id @default(cuid())
+  hashId    Int          @unique @default(autoincrement())
+  clubId    String
+  club      Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  name      String // "Court 1"
+  type      CourtType
+  surface   CourtSurface?
+  isIndoor  Boolean      @default(false)
+  hasLights Boolean      @default(true)
+  capacity  Int          @default(4)
+  sortOrder Int          @default(0)
+  isActive  Boolean      @default(true)
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  pricing   CourtPricing[]
+  bookings  Booking[]
+  waitlist  Waitlist[]
+
+  @@index([clubId, isActive])
+  @@map("courts")
+}
+
+enum DayType {
+  WEEKDAY
+  WEEKEND
+}
+
+// Hour band × day type → walk-in price. Plan discounts apply on top.
+model CourtPricing {
+  id          String  @id @default(cuid())
+  courtId     String
+  court       Court   @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  dayType     DayType
+  startHour   Int     // inclusive, 0-23
+  endHour     Int     // exclusive, 1-24
+  walkInPrice Int     // paise per 60-minute session
+  label       String  // "Off-peak" / "Peak"
+
+  @@index([courtId, dayType])
+  @@map("court_pricing")
+}
+
+enum BookingKind {
+  PRIVATE
+  SOCIAL
+  COACHING
+  MAINTENANCE
+  TRIAL
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
+enum BookingSource {
+  WEB
+  APP
+  FRONT_DESK
+  PHONE
+  WHATSAPP
+}
+
+// Overlap safety is enforced by the Postgres exclusion constraint
+// `booking_no_overlap` (see migration), not only by application code.
+model Booking {
+  id            String        @id @default(cuid())
+  hashId        Int           @unique @default(autoincrement())
+  clubId        String
+  club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  courtId       String
+  court         Court         @relation(fields: [courtId], references: [id], onDelete: Restrict)
+
+  memberId      String?       // null for walk-in
+  member        Member?       @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  walkInName    String?
+  walkInPhone   String?
+
+  startsAt      DateTime
+  endsAt        DateTime      // startsAt + 60 min
+  kind          BookingKind   @default(PRIVATE)
+  status        BookingStatus @default(CONFIRMED)
+  source        BookingSource @default(WEB)
+
+  listPrice     Int           // paise, before plan discount
+  discountPct   Int           @default(0)
+  priceCharged  Int           // paise after discount
+  priceReason   String?       // "Gold plan — free courts"
+  transactionId String?       @unique
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  checkedInAt   DateTime?
+  cancelledAt   DateTime?
+  cancelReason  String?
+  creditIssued  Int           @default(0) // paise returned to member.creditBalance on cancel
+
+  createdById   String?
+  createdBy     User?         @relation("BookingCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([clubId, startsAt])
+  @@index([courtId, startsAt])
+  @@index([memberId, startsAt])
+  @@map("bookings")
+}
+
+enum WaitlistStatus {
+  WAITING
+  OFFERED
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+}
+
+model Waitlist {
+  id        String         @id @default(cuid())
+  clubId    String
+  club      Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  courtId   String
+  court     Court          @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  startsAt  DateTime
+  status    WaitlistStatus @default(WAITING)
+  offeredAt DateTime?
+  expiresAt DateTime?
+  createdAt DateTime       @default(now())
+
+  @@unique([courtId, startsAt, memberId])
+  @@index([clubId, startsAt, status])
+  @@map("waitlist")
+}
+
+// ───────────────────────── Money (single ledger) ─────────────────────────
+
+enum PaymentMode {
+  CASH
+  CARD
+  UPI
+  ONLINE
+  CREDIT
+  COMPLIMENTARY
+}
+
+enum TxSource {
+  COURT
+  SHOP
+  BAR
+  MEMBERSHIP
+  COACHING
+  EVENT
+  REFUND
+  OTHER
+}
+
+enum TxDirection {
+  IN
+  OUT
+}
+
+// Every rupee in or out of the club lands here, whatever module made it.
+model Transaction {
+  id          String      @id @default(cuid())
+  hashId      Int         @unique @default(autoincrement())
+  clubId      String
+  club        Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberId    String?
+  member      Member?     @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  source      TxSource
+  direction   TxDirection @default(IN)
+  amount      Int         // paise, gross
+  tax         Int         @default(0)
+  paymentMode PaymentMode
+  reference   String?     // UPI txn id, card last4
+  refType     String?     // Booking | ShopOrder | BarTab | Invoice
+  refId       String?
+  description String
+
+  byUserId    String?
+  byUser      User?       @relation(fields: [byUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime    @default(now())
+
+  booking     Booking?
+
+  @@index([clubId, createdAt])
+  @@index([clubId, source])
+  @@map("transactions")
 }
 
 // ActivityLog: lightweight audit trail.
