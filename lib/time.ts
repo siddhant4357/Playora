@@ -159,6 +159,11 @@ export function formatDateTime(date: Date, tz: string): string {
   }).format(date);
 }
 
+/** "3 Oct 2026" — for documents and ledgers where the time is noise. */
+export function formatDate(date: Date, tz: string, opts: { long?: boolean } = {}): string {
+  return new Intl.DateTimeFormat("en-IN", { timeZone: tz, day: "numeric", month: opts.long ? "long" : "short", year: "numeric" }).format(date);
+}
+
 export function minutesToLabel(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
