@@ -12,7 +12,7 @@ export default async function MemberLayout({ children }: { children: React.React
   const club = await getClub(user.clubId);
 
   return (
-    <MemberShell user={user} clubName={club?.name ?? "Yolla"}>
+    <MemberShell user={user} clubName={club?.name ?? "Playora"}>
       {children}
     </MemberShell>
   );

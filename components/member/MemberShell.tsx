@@ -15,6 +15,7 @@ import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MEMBER_TABS } from "@/lib/nav";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BrandLogo } from "@/components/shared/BrandMark";
 import type { SessionPayload } from "@/lib/auth";
 
 interface MemberShellProps {
@@ -39,8 +40,8 @@ export function MemberShell({ user, clubName, children }: MemberShellProps) {
           borderBottom: "1px solid var(--color-border)",
         }}
       >
-        <Link href="/" className="flex flex-col leading-tight">
-          <span className="text-sm font-bold tracking-tight">Yolla</span>
+        <Link href="/" className="flex flex-col gap-0.5 leading-tight" aria-label="Playora home">
+          <BrandLogo height={16} className="self-start" />
           <span className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>
             {clubName}
           </span>

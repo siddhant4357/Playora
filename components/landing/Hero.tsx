@@ -69,7 +69,7 @@ export function Hero() {
         </div>
         <div className="lh-arc" aria-hidden="true" />
 
-        <div className="win" role="img" aria-label="Yolla front desk today board showing the live court grid, who is checked in, and alerts">
+        <div className="win" role="img" aria-label="Playora front desk today board showing the live court grid, who is checked in, and alerts">
           <div className="win-bar">
             <span className="win-logo" aria-hidden="true">
               <Trophy size={13} strokeWidth={2.5} />

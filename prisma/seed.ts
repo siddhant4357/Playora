@@ -1,7 +1,7 @@
 /**
  * prisma/seed.ts
  *
- * Idempotent seed for Yolla. Safe to re-run: every row is upserted on a
+ * Idempotent seed for Playora. Safe to re-run: every row is upserted on a
  * stable natural key (club slug, user email), so demo accounts keep their
  * ids across runs and nothing is deleted.
  *
@@ -676,7 +676,7 @@ async function seedHr(clubId: string, tz: string, users: { id: string; role: Rol
 }
 
 async function main() {
-  console.log("Seeding Yolla…");
+  console.log("Seeding Playora…");
 
   const club = await seedClub();
   console.log(`  club    ${club.name} (${club.slug})`);

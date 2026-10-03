@@ -31,7 +31,7 @@ export function Shift() {
         </div>
         <div className="col after">
           <h3>
-            <Check size={16} color="#1a7f6f" /> With Yolla
+            <Check size={16} color="#1a7f6f" /> With Playora
           </h3>
           <ul>
             <li>

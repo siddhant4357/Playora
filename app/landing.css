@@ -1,4 +1,4 @@
-/* Landing page — Yolla for The Champions Club
+/* Landing page — Playora for The Champions Club
    Visual language: white canvas, plum primary, mint highlighter, coral sparkle,
    hand-drawn arrows, product shown inside a window card. Inter everywhere. */
 
@@ -239,16 +239,6 @@ html.dark .doodle {
   font-size: 17px;
   color: var(--ink);
   letter-spacing: -0.03em;
-}
-
-.ln-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--plum), var(--plum-hover));
-  display: grid;
-  place-items: center;
-  color: #fff;
 }
 
 .ln-brand small {

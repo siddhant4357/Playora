@@ -20,9 +20,9 @@ export function GuestMenu({ token, menu }: { token: string; menu: Item[] }) {
   const [pending, start] = useTransition();
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(`yolla-tab-${token}`);
+    const saved = sessionStorage.getItem(`playora-tab-${token}`);
     if (saved) setTabId(saved);
-    const savedName = sessionStorage.getItem("yolla-guest-name");
+    const savedName = sessionStorage.getItem("playora-guest-name");
     if (savedName) setName(savedName);
   }, [token]);
 
@@ -47,8 +47,8 @@ export function GuestMenu({ token, menu }: { token: string; menu: Item[] }) {
       const res = await guestOrderAction({ token, guestName: name, lines: lines.map(([productId, qty]) => ({ productId, qty })) });
       if (!res.success) return void toast.error(res.error);
       toast.success(res.message);
-      sessionStorage.setItem(`yolla-tab-${token}`, res.data.tabId);
-      sessionStorage.setItem("yolla-guest-name", name);
+      sessionStorage.setItem(`playora-tab-${token}`, res.data.tabId);
+      sessionStorage.setItem("playora-guest-name", name);
       setTabId(res.data.tabId);
       setCart({});
     });

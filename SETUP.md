@@ -1,4 +1,4 @@
-# Yolla — setup & integrations
+# Playora — setup & integrations
 
 Everything the app needs to run, and the optional integrations that light up
 WhatsApp, voice and Ask AI. The app works with **only the required vars**;
@@ -11,7 +11,7 @@ queries) when its keys are absent.
 | --- | --- |
 | `DATABASE_URL` | Postgres (Prisma Postgres, Neon, Supabase — anything with `btree_gist`). |
 | `JWT_SECRET` | 32+ random bytes. `openssl rand -base64 32`. |
-| `NEXT_PUBLIC_APP_URL` | Public origin, e.g. `https://yolla.vercel.app`. Used in QR codes, share links and WhatsApp deep links. |
+| `NEXT_PUBLIC_APP_URL` | Public origin, e.g. `https://playora.vercel.app`. Used in QR codes, share links and WhatsApp deep links. |
 
 ```bash
 npx prisma migrate deploy
@@ -77,7 +77,7 @@ Steps:
    to `https://<your-domain>/api/vapi/tools` and add header
    `x-vapi-secret: <VAPI_SERVER_SECRET>`.
 3. Create an **Assistant** (any realtime model; GPT-4o-mini is plenty). Attach
-   the four tools. Suggested first message: *"Hi, this is Yolla at The
+   the four tools. Suggested first message: *"Hi, this is Playora at The
    Champions Club. Would you like to book a court?"*
    System prompt starter:
 

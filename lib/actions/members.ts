@@ -205,12 +205,12 @@ export type CheckInResult =
   | { success: true; message: string; member: { id: string; name: string; code: string; plan: string | null; tier: string | null; daysLeft: number | null; status: string; booking: string | null } }
   | { success: false; error: string; member?: { id: string; name: string; code: string; status: string } };
 
-/** Accepts a member code (CC-0001), a scanned token ("yolla:<memberId>") or a phone number. */
+/** Accepts a member code (CC-0001), a scanned token ("playora:<memberId>") or a phone number. */
 export async function checkInAction(input: { token: string; method?: "QR" | "MANUAL" }): Promise<CheckInResult> {
   try {
     const user = await requireRole(...STAFF);
     const raw = input.token.trim();
-    const qrToken = raw.startsWith("yolla:") ? raw.slice(6) : null;
+    const qrToken = raw.startsWith("playora:") ? raw.slice(6) : null;
 
     const member = await prisma.member.findFirst({
       where: {

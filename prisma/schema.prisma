@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Prisma Schema — Yolla (sports club management)
+// Prisma Schema — Playora (sports club management)
 // ─────────────────────────────────────────────────────────────────────────────
 
 generator client {

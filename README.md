@@ -1,8 +1,8 @@
-# Yolla — Sports Club Management System
+# Playora — Sports Club Management System
 
 **Odoo Hackathon submission.** One kernel, seven roles, every rupee in one ledger.
 
-Yolla runs a multi-sport club end to end: court booking, memberships, bar & cafeteria POS with a kitchen display, pro shop with click-and-collect, finance (invoices, payables, GST), HR (rota, attendance, leave, payroll), a WhatsApp / voice booking agent, and a plain-English analytics console for the owner. Built for **The Champions Club** (demo tenant) but multi-tenant by design — every row carries a `clubId`.
+Playora runs a multi-sport club end to end: court booking, memberships, bar & cafeteria POS with a kitchen display, pro shop with click-and-collect, finance (invoices, payables, GST), HR (rota, attendance, leave, payroll), a WhatsApp / voice booking agent, and a plain-English analytics console for the owner. Built for **The Champions Club** (demo tenant) but multi-tenant by design — every row carries a `clubId`.
 
 - Full product spec and data model: [`CONTEXT.md`](./CONTEXT.md)
 - Build order and architecture decisions: [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md)
@@ -12,7 +12,7 @@ Yolla runs a multi-sport club end to end: court booking, memberships, bar & cafe
 
 ## Why it is built like Odoo
 
-| Odoo principle | How Yolla applies it |
+| Odoo principle | How Playora applies it |
 | --- | --- |
 | Modules on one kernel | `lib/kernel/` owns stock movement (row-locked), ledger posting, activity log and document numbering. Booking, bar, shop, finance and HR engines call into it instead of touching tables directly. |
 | One contact record | A `Member` is the same person at the front desk, the bar tab, the shop order, the WhatsApp agent and the member app. Discounts, credit and plan status follow them everywhere. |

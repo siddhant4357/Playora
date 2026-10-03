@@ -43,7 +43,7 @@ export function MemberCard({ member, qrToken }: { member: Member; qrToken: strin
           )}
         </span>
         <span className="flex shrink-0 items-center justify-center rounded-xl bg-white p-2">
-          <QRCodeSVG value={`yolla:${qrToken}`} size={64} fgColor="#20121d" />
+          <QRCodeSVG value={`playora:${qrToken}`} size={64} fgColor="#20121d" />
         </span>
       </button>
 
@@ -56,7 +56,7 @@ export function MemberCard({ member, qrToken }: { member: Member; qrToken: strin
             <DialogDescription>Front desk scans it to check you in and link today&apos;s booking.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-white p-6">
-            <QRCodeSVG value={`yolla:${qrToken}`} size={240} level="M" fgColor="#20121d" />
+            <QRCodeSVG value={`playora:${qrToken}`} size={240} level="M" fgColor="#20121d" />
             <span className="font-mono text-lg font-semibold tracking-widest" style={{ color: "#20121d" }}>
               {member.memberCode}
             </span>

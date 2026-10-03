@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { BrandLogo } from "@/components/shared/BrandMark";
 
 export function Footer() {
   return (
@@ -7,11 +7,8 @@ export function Footer() {
       <div className="l-container">
         <div className="lf-grid">
           <div className="lf-brand">
-            <Link href="/" className="ln-brand" aria-label="Yolla home">
-              <span className="ln-mark" aria-hidden="true">
-                <Trophy size={15} strokeWidth={2.5} />
-              </span>
-              Yolla
+            <Link href="/" className="ln-brand" aria-label="Playora home">
+              <BrandLogo height={24} />
             </Link>
             <p>
               The operating system for a sports club — courts, members, bar, shop, staff and the money on one kernel. Built for The
@@ -47,7 +44,7 @@ export function Footer() {
           </div>
         </div>
         <div className="lf-bottom">
-          <span>© {new Date().getFullYear()} The Champions Club · Yolla</span>
+          <span>© {new Date().getFullYear()} The Champions Club · Playora</span>
           <span>Built for the Odoo Hackathon</span>
         </div>
       </div>

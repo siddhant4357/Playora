@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { ChevronRight, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navFor } from "@/lib/nav";
+import { BrandLogo } from "@/components/shared/BrandMark";
 import { ROLE_LABELS, type Role } from "@/lib/roles";
 
 interface SidebarProps {
@@ -53,13 +54,8 @@ export function Sidebar({ userRole, clubName, isOpen, onToggle }: SidebarProps) 
           className="flex items-center justify-between flex-shrink-0 px-4"
           style={{ height: "56px", borderBottom: "1px solid var(--color-border)" }}
         >
-          <Link href="/" className="flex flex-col leading-tight min-w-0">
-            <span
-              className="font-bold tracking-tight"
-              style={{ color: "var(--color-text)", letterSpacing: "-0.02em", fontSize: "0.9rem" }}
-            >
-              Yolla
-            </span>
+          <Link href="/" className="flex flex-col gap-0.5 leading-tight min-w-0" aria-label="Playora home">
+            <BrandLogo height={16} className="self-start" />
             {clubName && (
               <span className="text-[10px] truncate" style={{ color: "var(--color-text-muted)" }}>
                 {clubName}

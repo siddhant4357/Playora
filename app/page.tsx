@@ -16,7 +16,7 @@ import { getDefaultClub } from "@/lib/club";
 import { getFreeThisWeek } from "@/lib/leads/queries";
 
 export const metadata: Metadata = {
-  title: "Yolla — The Champions Club",
+  title: "Playora — The Champions Club",
   description:
     "Courts, members, bar, shop and the money on one screen. Book a court, join a plan or sign in to run the club.",
 };

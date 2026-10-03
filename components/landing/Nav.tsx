@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { BrandLogo } from "@/components/shared/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const links = [
@@ -19,11 +19,8 @@ export function Nav({ appHref = null }: NavProps) {
   return (
     <header className="ln">
       <div className="l-container ln-inner">
-        <Link href="/" className="ln-brand" aria-label="Yolla home">
-          <span className="ln-mark" aria-hidden="true">
-            <Trophy size={15} strokeWidth={2.5} />
-          </span>
-          Yolla
+        <Link href="/" className="ln-brand" aria-label="Playora home">
+          <BrandLogo height={24} />
           <small>for The Champions Club</small>
         </Link>
 

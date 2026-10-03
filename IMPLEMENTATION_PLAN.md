@@ -1,4 +1,4 @@
-# Yolla — Implementation Plan & Status
+# Playora — Implementation Plan & Status
 
 Sports Club Management System for The Champions Club (Odoo Hackathon).
 Branch: `v0/landing-courtos`. Spec and single source of truth: `CONTEXT.md`.

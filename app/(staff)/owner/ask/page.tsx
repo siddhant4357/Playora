@@ -4,7 +4,7 @@ import { SUGGESTED_QUESTIONS } from "@/lib/ask/labels";
 import { PageHeader } from "@/components/shared/Primitives";
 import { AskPanel } from "@/components/owner/AskPanel";
 
-export const metadata: Metadata = { title: "Ask AI · Yolla" };
+export const metadata: Metadata = { title: "Ask AI · Playora" };
 
 export default async function AskPage() {
   await requireRole("OWNER");

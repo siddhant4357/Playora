@@ -224,7 +224,7 @@ async function notifyDesk(clubId: string, leadId: string, subject: string, messa
   await sendEmail(
     club.email,
     `New enquiry — ${subject}`,
-    `<p>${subject}.</p>${message ? `<blockquote>${escapeHtml(message)}</blockquote>` : ""}<p><a href="/desk/leads/${leadId}">Open the lead in Yolla</a></p>`
+    `<p>${subject}.</p>${message ? `<blockquote>${escapeHtml(message)}</blockquote>` : ""}<p><a href="/desk/leads/${leadId}">Open the lead in Playora</a></p>`
   );
 }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { BrandMark } from "@/components/shared/BrandMark";
 
 const links = [
   { label: "Book a court", href: "/me/book" },
@@ -14,15 +14,7 @@ export default function Footer() {
     <footer className="border-t border-border bg-background text-muted-foreground font-sans">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-6 text-sm md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" aria-label="Yolla home" className="flex items-center gap-2 font-semibold text-foreground">
-            <span
-              aria-hidden="true"
-              className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground"
-            >
-              <Trophy size={13} strokeWidth={2.5} />
-            </span>
-            Yolla
-          </Link>
+          <BrandMark height={18} />
           <span aria-hidden="true" className="hidden md:inline">·</span>
           <span className="text-pretty">The Champions Club — courts, members, bar and the money on one kernel.</span>
         </div>
@@ -41,7 +33,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-border">
         <p className="mx-auto w-full max-w-6xl px-6 py-3 text-xs">
-          © {year} The Champions Club · Built on Yolla for the Odoo Hackathon
+          © {year} The Champions Club · Built on Playora for the Odoo Hackathon
         </p>
       </div>
     </footer>

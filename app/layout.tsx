@@ -13,12 +13,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Yolla — The Champions Club",
-    template: "%s | Yolla",
+    default: "Playora — The Champions Club",
+    template: "%s | Playora",
   },
   description:
     "Sports club management for The Champions Club: court bookings, memberships, bar and shop POS, and owner reporting on one ledger.",
-  keywords: ["sports club", "court booking", "membership", "club management", "Yolla"],
+  keywords: ["sports club", "court booking", "membership", "club management", "Playora"],
 };
 
 export default function RootLayout({

@@ -1,4 +1,4 @@
-# Yolla — Implementation Plan
+# Playora — Implementation Plan
 
 Small, ordered steps. Each step is one commit-sized piece of work with a clear "done" check.
 `CONTEXT.md` stays the source of truth for schema and page specs; this file is the *order of work*.

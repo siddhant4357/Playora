@@ -117,7 +117,7 @@ export default async function Member360Page({ params }: { params: Promise<{ id: 
 
         <div className="flex flex-col gap-4">
           <Panel title="Member pass">
-            <MemberQr token={`yolla:${m.qrToken}`} code={m.memberCode} name={`${m.firstName} ${m.lastName}`} />
+            <MemberQr token={`playora:${m.qrToken}`} code={m.memberCode} name={`${m.firstName} ${m.lastName}`} />
           </Panel>
           <Panel title="Details">
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
