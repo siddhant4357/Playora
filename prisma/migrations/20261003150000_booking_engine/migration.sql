@@ -318,6 +318,6 @@ ALTER TABLE "bookings"
   ADD CONSTRAINT booking_no_overlap
   EXCLUDE USING gist (
     "courtId" WITH =,
-    tstzrange("startsAt", "endsAt", '[)') WITH &&
+    tsrange("startsAt", "endsAt", '[)') WITH &&
   )
   WHERE ("status" = 'CONFIRMED' AND "kind" IN ('PRIVATE', 'COACHING', 'TRIAL', 'MAINTENANCE'));
