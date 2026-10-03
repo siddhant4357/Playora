@@ -29,11 +29,20 @@ export async function resolveContext(clubId: string, rawPhone: string, source: B
   const phone = normalisePhone(rawPhone);
   const club = await prisma.club.findUniqueOrThrow({ where: { id: clubId }, select: { name: true, timezone: true } });
   const last10 = phone.slice(-10);
-  const member = await prisma.member.findFirst({
-    where: { clubId, phone: { endsWith: last10 }, status: { in: ["ACTIVE", "EXPIRED", "TRIAL"] } },
-    select: { id: true, firstName: true, lastName: true, planId: true, plan: { select: { name: true } } },
-    orderBy: { status: "asc" },
-  });
+  // Stored phones are formatted ("+91 98200 00105"); compare digits only.
+  const matches = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM members
+    WHERE "clubId" = ${clubId}
+      AND status IN ('ACTIVE', 'TRIAL', 'EXPIRED')
+      AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${"%" + last10}
+    ORDER BY CASE status WHEN 'ACTIVE' THEN 0 WHEN 'TRIAL' THEN 1 ELSE 2 END
+    LIMIT 1`;
+  const member = matches[0]
+    ? await prisma.member.findUnique({
+        where: { id: matches[0].id },
+        select: { id: true, firstName: true, lastName: true, planId: true, plan: { select: { name: true } } },
+      })
+    : null;
   return {
     clubId,
     timezone: club.timezone,

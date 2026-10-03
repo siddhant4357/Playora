@@ -146,21 +146,26 @@ Today board: courts × slots coloured by status; quick-book modal (member search
 
 ---
 
-## Phase 7 — HR
+## Phase 7 — HR `[x]`
 
-7.1 Schema: `Employee`, `ShiftSchedule`, `LeaveRequest`, `PayrollRun`, `Payslip`.
-7.2 `/desk/shifts` rota + clock in/out. 7.3 `/owner/hr`, `/owner/hr/leave` approvals. 7.4 `/owner/hr/payroll` generate → approve → mark paid → ledger OUT + payslip PDF.
+7.1 Schema: `Employee`, `ShiftSchedule`, `Attendance`, `LeaveRequest`, `PayrollRun`, `Payslip` (migration `hr`). Engine `lib/hr/engine.ts`, queries `lib/hr/queries.ts`, actions `lib/actions/hr.ts`.
+7.2 `/desk/shifts` rota + clock in/out. 7.3 `/owner/hr`, `/owner/hr/leave` approvals. 7.4 `/owner/hr/payroll` generate → approve → mark paid → ledger OUT (`TxSource.PAYROLL`) + `/print/payslip/[id]`.
+Test: `npx tsx scripts/test-hr-engine.ts`.
 
 ---
 
-## Phase 8 — Integrations
+## Phase 8 — Integrations `[x]`
 
-8.1 Notification service `lib/notify.ts` with fallback chain (WhatsApp → email → in-app).
-8.2 Twilio WhatsApp sandbox outbound; inbound webhook `/api/webhooks/twilio` → AI SDK agent with tools `checkAvailability`, `book`, `cancel`, `myBookings`.
-8.3 Vapi voice tools `/api/vapi/tools` reusing the same tool functions.
-8.4 `/owner/ask`: NL → read-only SQL (scoped to `clubId`, allow-listed tables) → answer + chart + "show SQL".
+8.1 `lib/notify.ts` fallback chain WhatsApp (`lib/whatsapp.ts`, Twilio REST) → email (`lib/email.ts`) → in-app; records the delivering channel.
+8.2 Shared agent tools `lib/agent/tools.ts` (`checkAvailability`, `book`, `myBookings`, `cancel`) → `lib/booking/engine.ts`. Caller resolved by last-10-digits phone match (digits-only compare in SQL). Inbound Twilio webhook `/api/webhooks/twilio` → `lib/agent/run.ts` (AI SDK tool loop, TwiML reply, signature verified in prod).
+8.3 Vapi `/api/vapi/tools`: POST executes tool calls (`x-vapi-secret`), GET emits the tool definitions to paste into the dashboard.
+8.4 `/owner/ask` (`lib/ask/engine.ts`): NL → `Output.object` plan → `guardSql` (single SELECT, allow-listed tables, must contain `clubId`, auto-LIMIT) → `READ ONLY` tx + 4 s statement timeout → answer, bar/line chart, result table, "Show SQL". Vetted canned plans answer the six suggested questions when the Gateway is unavailable. Tests: `scripts/test-ask-guard.ts` (16), `scripts/test-ask-canned.ts`.
 
-**Done when:** a phone call books a court that appears on the desk grid.
+Setup walkthrough for Twilio / Vapi / Gateway: `SETUP.md`.
+
+**Done when:** a phone call books a court that appears on the desk grid. ✓ (verified via the Vapi endpoint; live voice needs the dashboard steps in SETUP.md.)
+
+**Open:** the Vercel team's AI Gateway needs a card on file before model calls succeed — until then the WhatsApp agent answers with the front-desk fallback and Ask AI uses canned plans.
 
 ---
 
