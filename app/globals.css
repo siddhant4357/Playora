@@ -399,6 +399,7 @@ html.dark {
   --color-text:          #e8e3f0;
   --color-text-muted:    #9b94aa;
   --color-text-subtle:   #6b6278;
+  --muted:               #241e33;
   color-scheme: dark;
 }
 

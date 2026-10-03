@@ -97,6 +97,159 @@ async function seedActivity(clubId: string, ownerId: string) {
   });
 }
 
+// ───────────────────────── Plans ─────────────────────────
+
+const PLANS = [
+  {
+    tier: "GOLD" as const,
+    name: "Gold",
+    priceMonthly: 500000,
+    priceYearly: 5000000,
+    courtDiscountPct: 100,
+    shopDiscountPct: 15,
+    barDiscountPct: 15,
+    maxBookingsPerDay: 2,
+    advanceBookingDays: 14,
+    guestPassesPerMonth: 4,
+    benefits: ["Courts included", "14-day advance booking", "15% off bar & shop", "4 guest passes / month"],
+  },
+  {
+    tier: "SILVER" as const,
+    name: "Silver",
+    priceMonthly: 250000,
+    priceYearly: 2500000,
+    courtDiscountPct: 50,
+    shopDiscountPct: 10,
+    barDiscountPct: 10,
+    maxBookingsPerDay: 2,
+    advanceBookingDays: 7,
+    guestPassesPerMonth: 2,
+    benefits: ["50% off courts", "7-day advance booking", "10% off bar & shop", "2 guest passes / month"],
+  },
+  {
+    tier: "JUNIOR" as const,
+    name: "Junior",
+    priceMonthly: 120000,
+    priceYearly: 1200000,
+    courtDiscountPct: 30,
+    shopDiscountPct: 5,
+    barDiscountPct: 0,
+    maxBookingsPerDay: 1,
+    advanceBookingDays: 3,
+    guestPassesPerMonth: 0,
+    benefits: ["30% off courts", "Under-18 only", "Coaching priority"],
+  },
+];
+
+async function seedPlans(clubId: string) {
+  const out = [];
+  for (const p of PLANS) {
+    out.push(
+      await prisma.membershipPlan.upsert({
+        where: { clubId_tier: { clubId, tier: p.tier } },
+        update: { ...p },
+        create: { ...p, clubId },
+      })
+    );
+  }
+  return out;
+}
+
+// ───────────────────────── Courts + pricing ─────────────────────────
+
+const COURTS = [
+  { name: "Court 1", type: "TENNIS" as const, surface: "HARD" as const, isIndoor: false, sortOrder: 1 },
+  { name: "Court 2", type: "TENNIS" as const, surface: "HARD" as const, isIndoor: false, sortOrder: 2 },
+  { name: "Court 3", type: "TENNIS" as const, surface: "CLAY" as const, isIndoor: false, sortOrder: 3 },
+  { name: "Court 4", type: "TENNIS" as const, surface: "SYNTHETIC" as const, isIndoor: true, sortOrder: 4 },
+  { name: "Court 5", type: "PADEL" as const, surface: "SYNTHETIC" as const, isIndoor: true, sortOrder: 5 },
+  { name: "Court 6", type: "PADEL" as const, surface: "SYNTHETIC" as const, isIndoor: true, sortOrder: 6 },
+];
+
+// walk-in prices in paise per 60-min session
+const PRICING_BANDS = [
+  { dayType: "WEEKDAY" as const, startHour: 6, endHour: 17, walkInPrice: 60000, label: "Off-peak" },
+  { dayType: "WEEKDAY" as const, startHour: 17, endHour: 23, walkInPrice: 100000, label: "Peak" },
+  { dayType: "WEEKEND" as const, startHour: 6, endHour: 23, walkInPrice: 120000, label: "Weekend" },
+];
+
+async function seedCourts(clubId: string) {
+  const out = [];
+  for (const c of COURTS) {
+    const existing = await prisma.court.findFirst({ where: { clubId, name: c.name } });
+    const court = existing
+      ? await prisma.court.update({ where: { id: existing.id }, data: c })
+      : await prisma.court.create({ data: { ...c, clubId } });
+
+    await prisma.courtPricing.deleteMany({ where: { courtId: court.id } });
+    const padelBump = c.type === "PADEL" ? 1.2 : 1;
+    await prisma.courtPricing.createMany({
+      data: PRICING_BANDS.map((b) => ({
+        ...b,
+        courtId: court.id,
+        walkInPrice: Math.round(b.walkInPrice * padelBump),
+      })),
+    });
+    out.push(court);
+  }
+  return out;
+}
+
+// ───────────────────────── Members ─────────────────────────
+
+const MEMBERS: Array<{
+  code: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  tier: "GOLD" | "SILVER" | "JUNIOR" | null;
+  status: "ACTIVE" | "EXPIRED" | "TRIAL" | "LEAD";
+  skill: number;
+  daysLeft: number;
+}> = [
+  { code: "CC-0001", firstName: "Aditya", lastName: "Rao", phone: "+91 98200 00007", email: "member@champions.club", tier: "GOLD", status: "ACTIVE", skill: 4, daysLeft: 200 },
+  { code: "CC-0002", firstName: "Neha", lastName: "Kulkarni", phone: "+91 98200 00101", tier: "SILVER", status: "ACTIVE", skill: 3, daysLeft: 45 },
+  { code: "CC-0003", firstName: "Vikram", lastName: "Desai", phone: "+91 98200 00102", tier: "GOLD", status: "ACTIVE", skill: 5, daysLeft: 5 },
+  { code: "CC-0004", firstName: "Ananya", lastName: "Bhatt", phone: "+91 98200 00103", tier: "JUNIOR", status: "ACTIVE", skill: 2, daysLeft: 90 },
+  { code: "CC-0005", firstName: "Rahul", lastName: "Menon", phone: "+91 98200 00104", tier: "SILVER", status: "EXPIRED", skill: 3, daysLeft: -12 },
+  { code: "CC-0006", firstName: "Sanya", lastName: "Kapoor", phone: "+91 98200 00105", tier: "SILVER", status: "ACTIVE", skill: 4, daysLeft: 2 },
+  { code: "CC-0007", firstName: "Imran", lastName: "Sheikh", phone: "+91 98200 00106", tier: "GOLD", status: "ACTIVE", skill: 3, daysLeft: 300 },
+  { code: "CC-0008", firstName: "Pooja", lastName: "Verma", phone: "+91 98200 00107", tier: null, status: "TRIAL", skill: 2, daysLeft: 7 },
+  { code: "CC-0009", firstName: "Karan", lastName: "Malhotra", phone: "+91 98200 00108", tier: null, status: "LEAD", skill: 3, daysLeft: 0 },
+  { code: "CC-0010", firstName: "Divya", lastName: "Sundaram", phone: "+91 98200 00109", tier: "SILVER", status: "ACTIVE", skill: 5, daysLeft: 120 },
+];
+
+async function seedMembers(clubId: string, plans: { id: string; tier: string }[]) {
+  const now = new Date();
+  const out = [];
+  for (const m of MEMBERS) {
+    const plan = m.tier ? plans.find((p) => p.tier === m.tier) : null;
+    const expiry = new Date(now.getTime() + m.daysLeft * 86_400_000);
+    const start = new Date(expiry.getTime() - 365 * 86_400_000);
+    const data = {
+      clubId,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      phone: m.phone,
+      email: m.email ?? null,
+      status: m.status,
+      planId: plan?.id ?? null,
+      startDate: plan ? start : null,
+      expiryDate: plan ? expiry : null,
+      skillRating: m.skill,
+    };
+    out.push(
+      await prisma.member.upsert({
+        where: { memberCode: m.code },
+        update: data,
+        create: { ...data, memberCode: m.code },
+      })
+    );
+  }
+  return out;
+}
+
 async function main() {
   console.log("Seeding Yolla…");
 
@@ -105,6 +258,20 @@ async function main() {
 
   const users = await seedUsers(club.id);
   for (const u of users) console.log(`  user    ${u.role.padEnd(10)} ${u.email}`);
+
+  const plans = await seedPlans(club.id);
+  console.log(`  plans   ${plans.map((p) => p.name).join(", ")}`);
+
+  const courts = await seedCourts(club.id);
+  console.log(`  courts  ${courts.length} with pricing bands`);
+
+  const members = await seedMembers(club.id, plans);
+  console.log(`  members ${members.length}`);
+
+  // Link the demo MEMBER login to its contact record.
+  const memberUser = users.find((u) => u.role === "MEMBER")!;
+  const aditya = members.find((m) => m.memberCode === "CC-0001")!;
+  await prisma.user.update({ where: { id: memberUser.id }, data: { memberId: aditya.id } });
 
   const owner = users.find((u) => u.role === "OWNER")!;
   await seedActivity(club.id, owner.id);
