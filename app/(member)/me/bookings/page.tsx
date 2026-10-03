@@ -5,6 +5,7 @@ import { CalendarPlus } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { getMemberContext, listMemberBookings } from "@/lib/booking/queries";
 import { BookingCard } from "@/components/booking/BookingCard";
+import { NoMemberProfile } from "@/components/member/NoMemberProfile";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "My bookings" };
@@ -13,7 +14,7 @@ export default async function MemberBookingsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login?callbackUrl=%2Fme%2Fbookings");
   const ctx = await getMemberContext(user.userId);
-  if (!ctx?.member) redirect("/me/book");
+  if (!ctx?.member) return <NoMemberProfile feature="your bookings" />;
 
   const { upcoming, past } = await listMemberBookings(ctx.member.id);
   const tz = ctx.club.timezone;

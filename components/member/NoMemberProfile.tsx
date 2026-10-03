@@ -15,7 +15,7 @@ export function NoMemberProfile({ feature }: { feature: string }) {
       <span className="flex size-10 items-center justify-center rounded-full" style={{ background: "var(--color-surface-2)" }}>
         <UserX className="h-5 w-5" style={{ color: "var(--color-text-muted)" }} />
       </span>
-      <p className="text-sm font-medium">No member profile on this account</p>
+      <h1 className="text-sm font-medium">No member profile on this account</h1>
       <p className="max-w-sm text-sm text-pretty" style={{ color: "var(--color-text-muted)" }}>
         {`This login isn't linked to a club membership yet, so there's nothing to show for ${feature}. Ask the front desk to link it, or sign in with a member account.`}
       </p>
