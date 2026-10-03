@@ -90,11 +90,11 @@ export function ShopCatalogue({ products, member }: Props) {
     <div className="pub-split">
       <section aria-label="Catalogue">
         <div className="shop-tabs" role="tablist" aria-label="Category">
-          <button type="button" className="pick-day" role="tab" aria-pressed={cat === "ALL"} aria-selected={cat === "ALL"} onClick={() => setCat("ALL")}>
+          <button type="button" className="pick-day" role="tab" aria-selected={cat === "ALL"} onClick={() => setCat("ALL")}>
             Everything
           </button>
           {cats.map((c) => (
-            <button key={c} type="button" className="pick-day" role="tab" aria-pressed={cat === c} aria-selected={cat === c} onClick={() => setCat(c)}>
+            <button key={c} type="button" className="pick-day" role="tab" aria-selected={cat === c} onClick={() => setCat(c)}>
               {CATEGORY_LABEL[c] ?? c}
             </button>
           ))}
@@ -182,10 +182,10 @@ export function ShopCatalogue({ products, member }: Props) {
               }}
             >
               <div className="seg-toggle" role="radiogroup" aria-label="Fulfilment">
-                <button type="button" role="radio" aria-checked={fulfilment === "CLICK_COLLECT"} aria-pressed={fulfilment === "CLICK_COLLECT"} onClick={() => setFulfilment("CLICK_COLLECT")}>
+                <button type="button" role="radio" aria-checked={fulfilment === "CLICK_COLLECT"} onClick={() => setFulfilment("CLICK_COLLECT")}>
                   Click &amp; collect
                 </button>
-                <button type="button" role="radio" aria-checked={fulfilment === "DELIVERY"} aria-pressed={fulfilment === "DELIVERY"} onClick={() => setFulfilment("DELIVERY")}>
+                <button type="button" role="radio" aria-checked={fulfilment === "DELIVERY"} onClick={() => setFulfilment("DELIVERY")}>
                   Delivery
                 </button>
               </div>

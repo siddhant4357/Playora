@@ -373,7 +373,7 @@ html.dark .landing .pub-error {
   cursor: pointer;
 }
 
-.landing .pick-day[aria-pressed="true"] {
+.landing .pick-day[aria-selected="true"] {
   background: var(--plum);
   border-color: var(--plum);
   color: #fff;
@@ -409,7 +409,7 @@ html.dark .landing .pub-error {
   border-color: var(--mint);
 }
 
-.landing .pick-slot[aria-pressed="true"] {
+.landing .pick-slot[aria-selected="true"] {
   border-color: var(--mint);
   background: var(--mint-soft);
 }
@@ -594,7 +594,7 @@ html.dark .landing .pub-error {
   cursor: pointer;
 }
 
-.landing .seg-toggle button[aria-pressed="true"] {
+.landing .seg-toggle button[aria-checked="true"] {
   background: var(--card);
   color: var(--ink);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);

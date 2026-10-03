@@ -88,7 +88,7 @@ export function TrialForm({ slots, timezone, preselect }: Props) {
           <>
             <div className="pick-days" role="tablist" aria-label="Day">
               {days.map((d) => (
-                <button key={d.dateKey} type="button" className="pick-day" role="tab" aria-pressed={d.dateKey === day} aria-selected={d.dateKey === day} onClick={() => setDay(d.dateKey)}>
+                <button key={d.dateKey} type="button" className="pick-day" role="tab" aria-selected={d.dateKey === day} onClick={() => setDay(d.dateKey)}>
                   {d.label}
                 </button>
               ))}
@@ -97,7 +97,7 @@ export function TrialForm({ slots, timezone, preselect }: Props) {
               {daySlots.map((s) => {
                 const on = picked?.courtId === s.courtId && picked?.startsAt === s.startsAt;
                 return (
-                  <button key={`${s.courtId}-${s.startsAt}`} type="button" className="pick-slot" role="option" aria-selected={on} aria-pressed={on} onClick={() => setPicked(s)}>
+                  <button key={`${s.courtId}-${s.startsAt}`} type="button" className="pick-slot" role="option" aria-selected={on} onClick={() => setPicked(s)}>
                     <b>{s.time}</b>
                     <span>{s.courtName}</span>
                     <span>

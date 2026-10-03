@@ -291,6 +291,12 @@ const PRODUCTS: Array<{
   { sku: "FOOD-BROWN", name: "Brownie", category: "FOOD", price: 16000, costPrice: 4500, stock: 200, bar: true, shop: false, lowAt: 20 },
 ];
 
+/** SKUs that have a catalogue image in public/products/<sku>.png */
+const PRODUCT_IMAGES = new Set([
+  "RKT-WPS97", "RKT-BPD", "RKT-HSP", "PDL-BUL", "BAL-WUS4", "BAL-HPD3", "SHO-AGC",
+  "ACC-GRIP", "ACC-DAMP", "ACC-WRST", "APP-TEE", "APP-CAP", "BEV-WATER", "BEV-ISO",
+]);
+
 async function seedProducts(clubId: string) {
   const out = [];
   for (const p of PRODUCTS) {
@@ -307,6 +313,7 @@ async function seedProducts(clubId: string) {
       isService: p.service ?? false,
       trackStock: p.track ?? true,
       lowStockAt: p.lowAt ?? 5,
+      imageUrl: PRODUCT_IMAGES.has(p.sku) ? `/products/${p.sku.toLowerCase()}.png` : null,
     };
     const existing = await prisma.product.findUnique({ where: { sku: p.sku } });
     if (existing) {

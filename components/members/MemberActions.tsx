@@ -32,7 +32,8 @@ export function MemberActions({ memberId, status, currentPlanId, creditBalance, 
   const setStatus = (s: "ACTIVE" | "FROZEN" | "CANCELLED") =>
     start(async () => {
       const res = await setMemberStatusAction({ memberId, status: s });
-      res.success ? toast.success(res.message) : toast.error(res.error);
+      if (res.success) toast.success(res.message);
+      else toast.error(res.error);
     });
 
   return (

@@ -18,7 +18,8 @@ export function MemberProfileForm({ initial }: { initial: { phone: string; emerg
         e.preventDefault();
         start(async () => {
           const res = await updateMyMemberProfileAction(form);
-          res.success ? toast.success(res.message) : toast.error(res.error);
+          if (res.success) toast.success(res.message);
+          else toast.error(res.error);
         });
       }}
     >

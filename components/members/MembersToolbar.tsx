@@ -24,8 +24,14 @@ export function MembersToolbar({ q, filter, counts }: { q: string; filter: Membe
 
   const push = (next: { q?: string; f?: string }) => {
     const sp = new URLSearchParams(params.toString());
-    if (next.q !== undefined) (next.q ? sp.set("q", next.q) : sp.delete("q"));
-    if (next.f !== undefined) (next.f && next.f !== "ALL" ? sp.set("f", next.f) : sp.delete("f"));
+    if (next.q !== undefined) {
+      if (next.q) sp.set("q", next.q);
+      else sp.delete("q");
+    }
+    if (next.f !== undefined) {
+      if (next.f && next.f !== "ALL") sp.set("f", next.f);
+      else sp.delete("f");
+    }
     startTransition(() => router.replace(`/desk/members?${sp.toString()}`));
   };
 
