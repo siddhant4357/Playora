@@ -31,7 +31,7 @@ export function Shift() {
         </div>
         <div className="col after">
           <h3>
-            <Check size={16} color="#1a7f6f" /> With CourtOS
+            <Check size={16} color="#1a7f6f" /> With Yolla
           </h3>
           <ul>
             <li>

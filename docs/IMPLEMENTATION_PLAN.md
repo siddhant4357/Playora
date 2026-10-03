@@ -1,4 +1,4 @@
-# CourtOS — Implementation Plan
+# Yolla — Implementation Plan
 
 Small, ordered steps. Each step is one commit-sized piece of work with a clear "done" check.
 `CONTEXT.md` stays the source of truth for schema and page specs; this file is the *order of work*.
@@ -15,32 +15,32 @@ Legend: `[x]` done · `[ ]` todo · **Done when** = acceptance check.
 - Middleware no longer redirects signed-in users away from `/`.
 - **Done when:** page renders light/dark, mobile/desktop, no hydration warnings.
 
-### 0.2 Roles + club on `User` `[ ]`
+### 0.2 Roles + club on `User` `[x]`
 - Extend `enum Role { OWNER MANAGER FRONT_DESK BAR_STAFF KITCHEN COACH MEMBER }` (drop `ADMIN`; map existing admins → `OWNER`).
 - Add `model Club { id hashId name slug timezone currency ... }` and `clubId` on `User`, `ActivityLog`.
 - `prisma migrate dev --name roles_and_club`. Seed one club: "The Champions Club".
 - **Done when:** `pnpm prisma studio` shows the club and users carry `clubId`.
 
-### 0.3 Auth helpers `[ ]`
+### 0.3 Auth helpers `[x]`
 - `lib/auth.ts`: `SessionPayload` gains `clubId`. Add `requireUser()` (throws/redirects when absent) and `requireRole(...roles)`.
 - `lib/roles.ts`: `homeFor(role)` map (see "After sign-in" below) and `canAccess(role, pathPrefix)`.
 - Every server action in `lib/actions/*` starts with `const user = await requireRole(...)`.
 - **Done when:** calling a desk action as `MEMBER` throws `FORBIDDEN`.
 
-### 0.4 Role-aware routing `[ ]`
+### 0.4 Role-aware routing `[x]`
 - `middleware.ts`: protect `/me`, `/desk`, `/shop-pos`, `/bar`, `/coach`, `/owner`, `/dashboard`; redirect by `canAccess`; add `/app` entry route that sends the user to `homeFor(role)`.
 - `/login` success → `redirect(callbackUrl ?? homeFor(role))`. `/register` creates a `MEMBER` of the seeded club and lands on `/me`.
 - Replace `/dashboard` with a redirect to `/app` (keep `/dashboard/settings` → move to `/me/profile` later).
 - **Done when:** seven seeded users log in and each lands on their own home.
 
-### 0.5 Layout shells per role `[ ]`
+### 0.5 Layout shells per role `[x]`
 - `app/(member)/me/layout.tsx` — mobile-first, bottom tab bar (Home · Book · Shop · Tab · Profile).
 - `app/(staff)/desk/layout.tsx`, `shop-pos/layout.tsx`, `bar/layout.tsx` — reuse `components/shared/DashboardShell` (Sidebar + Topbar + CommandPalette) with role-specific nav items.
 - `app/(owner)/owner/layout.tsx` — phone-first, same shell collapsed.
 - `app/display/layout.tsx` — no chrome (TV).
 - **Done when:** each home route renders an empty page inside the correct shell.
 
-### 0.6 Seed script `[ ]`
+### 0.6 Seed script `[~]` (club + 7 users done; courts/plans/members land with their schemas)
 - `prisma/seed.ts`: 1 club · 7 users (one per role, password `demo1234`) · 5 courts · 3 plans · 40 members · 2 weeks of bookings · 30 products · bar menu · 7 leads · 3 employees.
 - **Done when:** `pnpm db:seed` is idempotent and the landing "Free this week" strip can read real slots.
 

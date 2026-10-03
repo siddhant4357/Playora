@@ -10,15 +10,20 @@ const links = [
   { href: "#owner", label: "For owners" },
 ];
 
-export function Nav() {
+interface NavProps {
+  /** Role home of the signed-in user, or null for guests. */
+  appHref?: string | null;
+}
+
+export function Nav({ appHref = null }: NavProps) {
   return (
     <header className="ln">
       <div className="l-container ln-inner">
-        <Link href="/" className="ln-brand" aria-label="CourtOS home">
+        <Link href="/" className="ln-brand" aria-label="Yolla home">
           <span className="ln-mark" aria-hidden="true">
             <Trophy size={15} strokeWidth={2.5} />
           </span>
-          CourtOS
+          Yolla
           <small>for The Champions Club</small>
         </Link>
 
@@ -34,12 +39,20 @@ export function Nav() {
 
         <div className="ln-right">
           <ThemeToggle />
-          <Link href="/login" className="btn btn-ghost">
-            Sign in
-          </Link>
-          <Link href="/register" className="btn btn-primary">
-            Join the club
-          </Link>
+          {appHref ? (
+            <Link href={appHref} className="btn btn-primary">
+              Open app
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="btn btn-ghost">
+                Sign in
+              </Link>
+              <Link href="/register" className="btn btn-primary">
+                Join the club
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

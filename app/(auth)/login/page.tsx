@@ -10,6 +10,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { loginAction, type ActionResult } from "@/lib/actions/auth";
 
@@ -19,6 +20,7 @@ export default function LoginPage() {
     null
   );
   const [showPassword, setShowPassword] = useState(false);
+  const callbackUrl = useSearchParams().get("callbackUrl") ?? "";
 
   return (
     <div className="w-full bg-white dark:bg-[#1c1630] px-6 py-8 sm:px-10 sm:py-12 shadow-sm dark:shadow-[0_0_40px_rgba(113,75,103,0.15)] rounded-2xl border border-gray-100 dark:border-[#2e2048] dark:ring-1 dark:ring-[#3d2f5a]">
@@ -32,7 +34,7 @@ export default function LoginPage() {
         <Link href="/" className="inline-block">
           <Image
             src="/odoo-logo-clean.png"
-            alt="LDXODOO"
+            alt="Yolla"
             width={130}
             height={44}
             className="mx-auto dark:brightness-110 dark:drop-shadow-[0_0_8px_rgba(200,155,219,0.4)]"
@@ -48,6 +50,7 @@ export default function LoginPage() {
       )}
 
       <form action={action} className="space-y-5">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         {/* Email */}
         <div>
           <label

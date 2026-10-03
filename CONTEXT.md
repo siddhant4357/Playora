@@ -1,4 +1,4 @@
-# LDXODOO — Sports Club Management System (Odoo Hackathon)
+# Yolla — Sports Club Management System (Odoo Hackathon)
 ## Complete Project Context for AI-assisted end-to-end build
 
 > **Purpose of this file:** This is the single source of truth for building this project. It contains the original problem statement, the product vision, the exact tech stack in place, the database schema, every page in the app with its features and flow, integrations, wow features, the build order, and the demo script. An AI agent reading this file should be able to build the entire project without asking clarifying questions. Where this file says "MUST", treat it as a hard requirement.
@@ -24,7 +24,7 @@
 
 | Route | Description | Status |
 |---|---|---|
-| `/` | Landing page — CourtOS hero (live court grid), free-this-week strip, scenes A/B/C/D/F, plans, modules, owner band, CTA | ✅ Done — `components/landing/*`, `app/landing.css` (static showcase data until Phase 1.8) |
+| `/` | Landing page — Yolla hero (live court grid), free-this-week strip, scenes A/B/C/D/F, plans, modules, owner band, CTA | ✅ Done — `components/landing/*`, `app/landing.css` (static showcase data until Phase 1.8) |
 | `/login` | Login form with validation | ✅ Done |
 | `/register` | Registration form | ✅ Done |
 | `/forgot-password` | Request password reset via email | ✅ Done |
@@ -174,7 +174,7 @@ Requirements:
 
 ## 2. Product Vision & Why This Wins
 
-**Name:** CourtOS — *the operating system for sports clubs.*
+**Name:** Yolla — *the operating system for sports clubs.*
 **One line:** Clubs run on WhatsApp and Excel. We give them Odoo for sport, in one login, one ledger, one member record.
 
 **Odoo-style design philosophy (judges are from Odoo — mirror their thinking):**
@@ -185,7 +185,7 @@ Requirements:
 5. **Append-only audit.** Every mutation writes an `AuditLog` row (who, what, before, after).
 
 **Odoo Hackathon judging criteria and how we hit each:**
-| Criterion | How CourtOS answers |
+| Criterion | How Yolla answers |
 |---|---|
 | Technical implementation | DB-level exclusion constraint for double-booking, transactional POS, offline-capable POS queue, role-based server actions |
 | Innovation | Voice agent books courts by phone, WhatsApp agent, social-play matchmaker, churn radar, natural-language owner analytics |

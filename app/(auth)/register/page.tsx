@@ -44,7 +44,7 @@ export default function RegisterPage() {
         <Link href="/" className="inline-block">
           <Image
             src="/odoo-logo-clean.png"
-            alt="LDXODOO"
+            alt="Yolla"
             width={130}
             height={44}
             className="mx-auto dark:brightness-110 dark:drop-shadow-[0_0_8px_rgba(200,155,219,0.4)]"

@@ -7,11 +7,11 @@ export function Footer() {
       <div className="l-container">
         <div className="lf-grid">
           <div className="lf-brand">
-            <Link href="/" className="ln-brand" aria-label="CourtOS home">
+            <Link href="/" className="ln-brand" aria-label="Yolla home">
               <span className="ln-mark" aria-hidden="true">
                 <Trophy size={15} strokeWidth={2.5} />
               </span>
-              CourtOS
+              Yolla
             </Link>
             <p>
               The operating system for a sports club — courts, members, bar, shop, staff and the money on one kernel. Built for The
@@ -46,7 +46,7 @@ export function Footer() {
           </div>
         </div>
         <div className="lf-bottom">
-          <span>© {new Date().getFullYear()} The Champions Club · CourtOS</span>
+          <span>© {new Date().getFullYear()} The Champions Club · Yolla</span>
           <span>Built for the Odoo Hackathon</span>
         </div>
       </div>

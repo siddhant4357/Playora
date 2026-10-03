@@ -55,7 +55,8 @@ export async function updateProfileAction(
     },
   });
 
-  revalidatePath("/dashboard/settings");
+  revalidatePath("/account");
+  revalidatePath("/me/profile");
 
   return { success: true, message: "Profile updated successfully!" };
 }

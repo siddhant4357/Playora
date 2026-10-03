@@ -26,14 +26,14 @@ export async function sendPasswordResetEmail(
   const transporter = getTransporter();
 
   await transporter.sendMail({
-    from: `"LDXODOO" <${process.env.GMAIL_USER}>`,
+    from: `"Yolla" <${process.env.GMAIL_USER}>`,
     to,
-    subject: "Reset your LDXODOO password",
+    subject: "Reset your Yolla password",
     html: `
       <div style="font-family: Inter, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; background: #f8f7f5;">
         <div style="background: #fff; border-radius: 12px; padding: 40px; border: 1px solid #e8e4e0;">
           <h1 style="font-size: 22px; color: #1a1523; margin: 0 0 8px;">Reset your password</h1>
-          <p style="color: #6b7280; font-size: 15px; margin: 0 0 24px;">Hi ${name}, we received a request to reset your LDXODOO password.</p>
+          <p style="color: #6b7280; font-size: 15px; margin: 0 0 24px;">Hi ${name}, we received a request to reset your Yolla password.</p>
           
           <a href="${resetUrl}" 
              style="display: inline-block; background: #714B67; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; margin-bottom: 24px;">
@@ -50,6 +50,6 @@ export async function sendPasswordResetEmail(
         </div>
       </div>
     `,
-    text: `Hi ${name},\n\nReset your LDXODOO password here: ${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, ignore this email.`,
+    text: `Hi ${name},\n\nReset your Yolla password here: ${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, ignore this email.`,
   });
 }

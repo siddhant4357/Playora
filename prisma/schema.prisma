@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Prisma Schema — LDXODOO Hackathon Foundation
+// Prisma Schema — Yolla (sports club management)
 // ─────────────────────────────────────────────────────────────────────────────
 
 generator client {
@@ -29,9 +29,44 @@ datasource db {
 // Both fields are on every model. Do NOT use just one.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Roles are ordered roughly by authority. See lib/roles.ts for the
+// route-access matrix and the post-login home of each role.
 enum Role {
-  ADMIN
+  OWNER
+  MANAGER
+  FRONT_DESK
+  BAR_STAFF
+  KITCHEN
+  COACH
   MEMBER
+}
+
+// Club is the tenant. Every business record carries a clubId so the same
+// kernel can run several clubs; for the hackathon there is exactly one.
+model Club {
+  id        String   @id @default(cuid())
+  hashId    Int      @unique @default(autoincrement())
+
+  name      String
+  slug      String   @unique
+  tagline   String?
+  timezone  String   @default("Asia/Kolkata")
+  currency  String   @default("INR")
+  phone     String?
+  email     String?
+  address   String?
+
+  // Opening hours used by slot generation (24h clock, club-local time)
+  opensAt   String   @default("06:00")
+  closesAt  String   @default("23:00")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  activityLogs ActivityLog[]
+
+  @@map("clubs")
 }
 
 model User {
@@ -42,6 +77,10 @@ model User {
   passwordHash String
   name         String
   role         Role     @default(MEMBER)
+  phone        String?
+
+  clubId       String
+  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
   // Optional profile fields
   dob          DateTime?
@@ -53,6 +92,7 @@ model User {
   activityLogs        ActivityLog[]
   passwordResetTokens PasswordResetToken[]
 
+  @@index([clubId, role])
   @@map("users")
 }
 
@@ -85,8 +125,12 @@ model ActivityLog {
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  clubId    String?
+  club      Club?    @relation(fields: [clubId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
 
+  @@index([clubId, createdAt])
   @@index([userId])
   @@index([entity, entityId])
   @@index([createdAt])

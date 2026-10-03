@@ -5,7 +5,7 @@
  * Odoo Enterprise style: Clean, light gray background, centered white card.
  */
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import Footer from "@/components/shared/Footer";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -21,7 +21,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </div>
       <div className="flex-1 flex flex-col items-center justify-start pt-[20vh] pb-[60vh] px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
-          {children}
+          {/* Login reads useSearchParams (callbackUrl); Suspense keeps the page statically renderable. */}
+          <Suspense fallback={null}>{children}</Suspense>
         </div>
       </div>
       <Footer />

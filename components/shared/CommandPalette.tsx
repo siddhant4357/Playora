@@ -28,8 +28,8 @@ const COMMANDS = [
   {
     group: "Navigation",
     items: [
-      { id: "dashboard", label: "Go to Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-      { id: "settings", label: "Settings", icon: Settings, href: "/dashboard/settings" },
+  { id: "home", label: "Go to my home", icon: LayoutDashboard, href: "/app" },
+  { id: "account", label: "Account settings", icon: Settings, href: "/account" },
     ],
   },
   {

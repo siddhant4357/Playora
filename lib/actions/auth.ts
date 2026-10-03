@@ -22,7 +22,16 @@ import {
   clearSessionCookie,
   getCurrentUser,
 } from "@/lib/auth";
-import type { Role, Prisma } from "../../generated/prisma/client";
+import { homeFor, type Role } from "@/lib/roles";
+import { DEFAULT_CLUB_SLUG } from "@/lib/club";
+import type { Prisma } from "../../generated/prisma/client";
+
+/** Only same-origin relative paths are honoured, never external URLs. */
+function safeCallback(raw: FormDataEntryValue | null): string | null {
+  if (typeof raw !== "string") return null;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
 
 // ── Zod schemas ─────────────────────────────────────────────────────────────
 
@@ -56,7 +65,8 @@ async function logEvent(
   entity: string,
   entityId: string,
   userId: string,
-  newData?: Prisma.InputJsonValue
+  newData?: Prisma.InputJsonValue,
+  clubId?: string
 ) {
   try {
     await prisma.activityLog.create({
@@ -66,6 +76,7 @@ async function logEvent(
         entityId,
         newData: newData ?? undefined,
         userId,
+        clubId,
       },
     });
   } catch (err) {
@@ -105,8 +116,15 @@ export async function signupAction(
 
   const passwordHash = await bcrypt.hash(password, 12);
 
+  // Public signup always creates a MEMBER of the default club.
+  // Staff accounts are created by the owner from /owner/settings.
+  const club = await prisma.club.findUnique({ where: { slug: DEFAULT_CLUB_SLUG } });
+  if (!club) {
+    return { success: false, error: "The club is not set up yet. Please run the seed." };
+  }
+
   const user = await prisma.user.create({
-    data: { name, email, passwordHash, role: "MEMBER" },
+    data: { name, email, passwordHash, role: "MEMBER", clubId: club.id },
   });
 
   // Log signup event
@@ -122,10 +140,11 @@ export async function signupAction(
     email: user.email,
     name: user.name,
     role: user.role as Role,
+    clubId: user.clubId,
   });
   await setSessionCookie(token);
 
-  redirect("/dashboard");
+  redirect(homeFor("MEMBER"));
 }
 
 // ── loginAction ──────────────────────────────────────────────────────────────
@@ -173,10 +192,12 @@ export async function loginAction(
     email: user.email,
     name: user.name,
     role: user.role as Role,
+    clubId: user.clubId,
   });
   await setSessionCookie(token);
 
-  redirect("/dashboard");
+  const callbackUrl = safeCallback(formData.get("callbackUrl"));
+  redirect(callbackUrl ?? homeFor(user.role as Role));
 }
 
 // ── logoutAction ─────────────────────────────────────────────────────────────

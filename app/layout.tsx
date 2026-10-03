@@ -12,12 +12,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "CourtOS — The Champions Club",
-    template: "%s | CourtOS",
+    default: "Yolla — The Champions Club",
+    template: "%s | Yolla",
   },
   description:
     "Sports club management for The Champions Club: court bookings, memberships, bar and shop POS, and owner reporting on one ledger.",
-  keywords: ["sports club", "court booking", "membership", "club management", "CourtOS"],
+  keywords: ["sports club", "court booking", "membership", "club management", "Yolla"],
 };
 
 export default function RootLayout({

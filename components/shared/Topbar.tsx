@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import type { SessionPayload } from "@/lib/auth";
+import { ROLE_LABELS } from "@/lib/roles";
 
 interface TopbarProps {
   user: SessionPayload;
@@ -122,16 +123,16 @@ export function Topbar({ user, onOpenPalette, sidebarOpen, onToggleSidebar }: To
                   fontSize: "0.65rem",
                   padding: "0.1rem 0.5rem",
                   background:
-                    user.role === "ADMIN"
+                    user.role === "OWNER"
                       ? "var(--color-primary-100)"
                       : "#f3eff5",
                   color:
-                    user.role === "ADMIN"
+                    user.role === "OWNER"
                       ? "var(--color-primary-700)"
                       : "var(--color-text-muted)",
                 }}
               >
-                {user.role}
+                {ROLE_LABELS[user.role]}
               </span>
             </div>
 
@@ -139,10 +140,10 @@ export function Topbar({ user, onOpenPalette, sidebarOpen, onToggleSidebar }: To
 
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => { window.location.href = "/dashboard/settings"; }}
+              onClick={() => { window.location.href = "/account"; }}
             >
               <Settings className="w-4 h-4 mr-2" />
-              Settings
+              Account
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />

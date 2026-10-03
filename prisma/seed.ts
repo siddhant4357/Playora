@@ -1,16 +1,26 @@
 /**
  * prisma/seed.ts
  *
- * Seeds the database with:
- *   - 1 admin user  (admin@ldxodoo.dev / Admin@123!)
- *   - 1 member user (member@ldxodoo.dev / Member@123!)
- *   - Sample ActivityLog rows with realistic data
+ * Idempotent seed for Yolla. Safe to re-run: every row is upserted on a
+ * stable natural key (club slug, user email), so demo accounts keep their
+ * ids across runs and nothing is deleted.
  *
- * Run with:  npx prisma db seed
- * Requires DATABASE_URL to be set and migrations to have been applied.
+ * Phase 0 seeds the club and one user per role. Later phases append courts,
+ * plans, members, bookings, products, menu, leads and employees here.
+ *
+ * Demo accounts (password for all: demo1234)
+ *   owner@champions.club      OWNER
+ *   manager@champions.club    MANAGER
+ *   desk@champions.club       FRONT_DESK
+ *   bar@champions.club        BAR_STAFF
+ *   kitchen@champions.club    KITCHEN
+ *   coach@champions.club      COACH
+ *   member@champions.club     MEMBER
+ *
+ * Run with:  pnpm db:seed   (requires DATABASE_URL + applied migrations)
  */
 
-import { PrismaClient, Role } from "../generated/prisma/client";
+import { PrismaClient, type Role } from "../generated/prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
@@ -19,116 +29,95 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-const SALT_ROUNDS = 12;
+const DEMO_PASSWORD = "demo1234";
+const CLUB_SLUG = "champions";
+
+const DEMO_USERS: Array<{ email: string; name: string; role: Role; phone: string }> = [
+  { email: "owner@champions.club", name: "Rohan Mehta", role: "OWNER", phone: "+91 98200 00001" },
+  { email: "manager@champions.club", name: "Priya Nair", role: "MANAGER", phone: "+91 98200 00002" },
+  { email: "desk@champions.club", name: "Arjun Shah", role: "FRONT_DESK", phone: "+91 98200 00003" },
+  { email: "bar@champions.club", name: "Kavya Iyer", role: "BAR_STAFF", phone: "+91 98200 00004" },
+  { email: "kitchen@champions.club", name: "Suresh Pillai", role: "KITCHEN", phone: "+91 98200 00005" },
+  { email: "coach@champions.club", name: "Meera Joshi", role: "COACH", phone: "+91 98200 00006" },
+  { email: "member@champions.club", name: "Aditya Rao", role: "MEMBER", phone: "+91 98200 00007" },
+];
+
+async function seedClub() {
+  return prisma.club.upsert({
+    where: { slug: CLUB_SLUG },
+    update: {
+      name: "The Champions Club",
+      tagline: "Courts, members, bar and shop on one screen.",
+    },
+    create: {
+      id: "club_champions",
+      slug: CLUB_SLUG,
+      name: "The Champions Club",
+      tagline: "Courts, members, bar and shop on one screen.",
+      timezone: "Asia/Kolkata",
+      currency: "INR",
+      phone: "+91 22 4000 1234",
+      email: "hello@champions.club",
+      address: "12 Lakeview Road, Powai, Mumbai 400076",
+      opensAt: "06:00",
+      closesAt: "23:00",
+    },
+  });
+}
+
+async function seedUsers(clubId: string) {
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
+  const users = [];
+  for (const u of DEMO_USERS) {
+    const user = await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, role: u.role, phone: u.phone, clubId, passwordHash },
+      create: { ...u, clubId, passwordHash },
+    });
+    users.push(user);
+  }
+  return users;
+}
+
+async function seedActivity(clubId: string, ownerId: string) {
+  const alreadySeeded = await prisma.activityLog.findFirst({
+    where: { clubId, action: "CLUB_SEEDED" },
+  });
+  if (alreadySeeded) return;
+
+  await prisma.activityLog.create({
+    data: {
+      action: "CLUB_SEEDED",
+      entity: "Club",
+      entityId: clubId,
+      userId: ownerId,
+      clubId,
+      newData: { users: DEMO_USERS.length, source: "prisma/seed.ts" },
+    },
+  });
+}
 
 async function main() {
-  console.log("🌱  Starting seed…");
+  console.log("Seeding Yolla…");
 
-  // ── Clear existing seed data (idempotent) ──
-  await prisma.activityLog.deleteMany({});
-  await prisma.user.deleteMany({});
+  const club = await seedClub();
+  console.log(`  club    ${club.name} (${club.slug})`);
 
-  // ── Create users ──
-  const adminPassword = await bcrypt.hash("Admin@123!", SALT_ROUNDS);
-  const admin = await prisma.user.create({
-    data: {
-      email: "admin@ldxodoo.dev",
-      passwordHash: adminPassword,
-      name: "Arjun Sharma",
-      role: Role.ADMIN,
-    },
-  });
+  const users = await seedUsers(club.id);
+  for (const u of users) console.log(`  user    ${u.role.padEnd(10)} ${u.email}`);
 
-  const memberPassword = await bcrypt.hash("Member@123!", SALT_ROUNDS);
-  const member = await prisma.user.create({
-    data: {
-      email: "member@ldxodoo.dev",
-      passwordHash: memberPassword,
-      name: "Priya Nair",
-      role: Role.MEMBER,
-    },
-  });
+  const owner = users.find((u) => u.role === "OWNER")!;
+  await seedActivity(club.id, owner.id);
 
-  console.log(`✅  Created users: ${admin.email}, ${member.email}`);
-
-  // ── Create realistic ActivityLog rows ──
-  const now = new Date();
-  const minutesAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000);
-
-  const logs = await prisma.activityLog.createMany({
-    data: [
-      {
-        action: "USER_SIGNUP",
-        entity: "User",
-        entityId: admin.id,
-        oldData: undefined,
-        newData: { email: admin.email, name: admin.name, role: "ADMIN" },
-        userId: admin.id,
-        ipAddress: "127.0.0.1",
-        userAgent: "Mozilla/5.0 (seed script)",
-        createdAt: minutesAgo(120),
-      },
-      {
-        action: "USER_SIGNUP",
-        entity: "User",
-        entityId: member.id,
-        oldData: undefined,
-        newData: { email: member.email, name: member.name, role: "MEMBER" },
-        userId: member.id,
-        ipAddress: "127.0.0.1",
-        userAgent: "Mozilla/5.0 (seed script)",
-        createdAt: minutesAgo(90),
-      },
-      {
-        action: "USER_LOGIN",
-        entity: "User",
-        entityId: admin.id,
-        oldData: undefined,
-        newData: { status: "authenticated" },
-        userId: admin.id,
-        ipAddress: "192.168.1.10",
-        userAgent:
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
-        createdAt: minutesAgo(60),
-      },
-      {
-        action: "USER_LOGIN",
-        entity: "User",
-        entityId: member.id,
-        oldData: undefined,
-        newData: { status: "authenticated" },
-        userId: member.id,
-        ipAddress: "192.168.1.42",
-        userAgent:
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
-        createdAt: minutesAgo(30),
-      },
-      {
-        action: "USER_LOGIN",
-        entity: "User",
-        entityId: admin.id,
-        oldData: undefined,
-        newData: { status: "authenticated" },
-        userId: admin.id,
-        ipAddress: "192.168.1.10",
-        userAgent:
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
-        createdAt: minutesAgo(5),
-      },
-    ],
-  });
-
-  console.log(`✅  Created ${logs.count} ActivityLog entries`);
-  console.log("\n🎉  Seed complete!");
-  console.log("   Admin:  admin@ldxodoo.dev   / Admin@123!");
-  console.log("   Member: member@ldxodoo.dev  / Member@123!");
+  console.log("\nDone. All demo accounts use the password: demo1234");
 }
 
 main()
   .catch((e) => {
-    console.error("❌  Seed failed:", e);
+    console.error("Seed failed:", e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

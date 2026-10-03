@@ -8,51 +8,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  ShieldCheck,
-  Package,
-  BarChart3,
-  Settings,
-  ChevronRight,
-  PanelLeftClose,
-  Boxes,
-} from "lucide-react";
+import { ChevronRight, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const NAV_SECTIONS = [
-  {
-    label: "Overview",
-    items: [
-      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
-    ],
-  },
-  {
-    label: "Inventory",
-    items: [
-      { label: "Products", href: "/dashboard/products", icon: Package },
-      { label: "Stock", href: "/dashboard/stock", icon: Boxes },
-      { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { label: "Health", href: "/admin/health", icon: ShieldCheck, adminOnly: true },
-      { label: "Settings", href: "/dashboard/settings", icon: Settings },
-    ],
-  },
-];
+import { navFor } from "@/lib/nav";
+import { ROLE_LABELS, type Role } from "@/lib/roles";
 
 interface SidebarProps {
-  userRole?: string;
+  userRole: Role;
+  clubName?: string;
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export function Sidebar({ userRole, isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ userRole, clubName, isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname();
-  const isAdmin = userRole === "ADMIN";
+  const sections = navFor(userRole);
 
   return (
     <>
@@ -83,14 +53,19 @@ export function Sidebar({ userRole, isOpen, onToggle }: SidebarProps) {
           className="flex items-center justify-between flex-shrink-0 px-4"
           style={{ height: "56px", borderBottom: "1px solid var(--color-border)" }}
         >
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex flex-col leading-tight min-w-0">
             <span
-              className="font-bold text-sm tracking-tight"
+              className="font-bold tracking-tight"
               style={{ color: "var(--color-text)", letterSpacing: "-0.02em", fontSize: "0.9rem" }}
             >
-              LDXODOO
+              Yolla
             </span>
-          </div>
+            {clubName && (
+              <span className="text-[10px] truncate" style={{ color: "var(--color-text-muted)" }}>
+                {clubName}
+              </span>
+            )}
+          </Link>
           <button
             onClick={onToggle}
             className="p-1.5 rounded-md transition-colors cursor-pointer hover:bg-gray-100"
@@ -103,12 +78,8 @@ export function Sidebar({ userRole, isOpen, onToggle }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-2 py-3" style={{ scrollbarWidth: "none" }}>
-          {NAV_SECTIONS.map((section) => {
-            if ((section as any).adminOnly && !isAdmin) return null;
-            const visibleItems = section.items.filter(
-              (item) => !(item as any).adminOnly || isAdmin
-            );
-            if (!visibleItems.length) return null;
+          {sections.map((section) => {
+            const visibleItems = section.items;
 
             return (
               <div key={section.label} className="mb-4">
@@ -120,9 +91,9 @@ export function Sidebar({ userRole, isOpen, onToggle }: SidebarProps) {
                 </p>
                 <div className="space-y-0.5">
                   {visibleItems.map((item) => {
-                    const active = (item as any).exact
+                    const active = item.exact
                       ? pathname === item.href
-                      : pathname.startsWith(item.href);
+                      : pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
                       <Link
                         key={item.href}
@@ -162,7 +133,7 @@ export function Sidebar({ userRole, isOpen, onToggle }: SidebarProps) {
           className="px-4 py-3 flex-shrink-0"
           style={{ borderTop: "1px solid var(--color-border)", color: "var(--color-text-subtle, #bbb)" }}
         >
-          <p className="text-[10px]">LDXODOO · v0.1</p>
+          <p className="text-[10px]">Signed in as {ROLE_LABELS[userRole]}</p>
         </div>
       </aside>
     </>

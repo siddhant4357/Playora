@@ -15,10 +15,11 @@ import Footer from "@/components/shared/Footer";
 
 interface DashboardShellProps {
   user: SessionPayload;
+  clubName?: string;
   children: React.ReactNode;
 }
 
-export function DashboardShell({ user, children }: DashboardShellProps) {
+export function DashboardShell({ user, clubName, children }: DashboardShellProps) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   // Default sidebar open on desktop, closed on mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -50,12 +51,10 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  const marginLeft = sidebarOpen ? "240px" : "0px";
-
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg)", display: "flex", flexDirection: "column" }}>
       {/* Sidebar */}
-      <Sidebar userRole={user.role} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      <Sidebar userRole={user.role} clubName={clubName} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       {/* Main area — shifts right when sidebar open on desktop */}
       <div

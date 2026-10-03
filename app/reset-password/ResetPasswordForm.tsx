@@ -50,7 +50,7 @@ export default function ResetPasswordForm() {
     <div className="w-full bg-white px-8 py-10 shadow-sm rounded-xl border border-gray-100">
       <div className="mb-6 text-center">
         <Link href="/" className="inline-block">
-          <Image src="/odoo-logo-clean.png" alt="LDXODOO" width={130} height={44} className="mx-auto" />
+          <Image src="/odoo-logo-clean.png" alt="Yolla" width={130} height={44} className="mx-auto" />
         </Link>
       </div>
 

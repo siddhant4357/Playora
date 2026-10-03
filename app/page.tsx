@@ -10,17 +10,20 @@ import { Owner } from "@/components/landing/Owner";
 import { Cta, Shift } from "@/components/landing/Shift";
 import { Footer } from "@/components/landing/Footer";
 import { Reveal } from "@/components/landing/Reveal";
+import { getCurrentUser } from "@/lib/auth";
+import { homeFor } from "@/lib/roles";
 
 export const metadata: Metadata = {
-  title: "CourtOS — The Champions Club",
+  title: "Yolla — The Champions Club",
   description:
     "Courts, members, bar, shop and the money on one screen. Book a court, join a plan or sign in to run the club.",
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
   return (
     <div className="landing">
-      <Nav />
+      <Nav appHref={user ? homeFor(user.role) : null} />
       <main>
         <Hero />
         <LiveStrip />

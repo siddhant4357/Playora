@@ -13,7 +13,9 @@
 
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import type { Role } from "../generated/prisma/client";
+import { redirect } from "next/navigation";
+import type { Role } from "./roles";
+import { SESSION_COOKIE_NAME, getSessionSecret } from "./session-secret";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -22,22 +24,23 @@ export interface SessionPayload {
   email: string;
   name: string;
   role: Role;
+  clubId: string;
   iat?: number;
   exp?: number;
 }
 
+export class AuthError extends Error {
+  constructor(public code: "UNAUTHENTICATED" | "FORBIDDEN") {
+    super(code);
+    this.name = "AuthError";
+  }
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────
 
-const SESSION_COOKIE = "ldxodoo_session";
+const SESSION_COOKIE = SESSION_COOKIE_NAME;
 const SESSION_DURATION = "7d";
-
-function getSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT_SECRET environment variable is not set.");
-  }
-  return new TextEncoder().encode(secret);
-}
+const getSecret = getSessionSecret;
 
 // ── JWT helpers ────────────────────────────────────────────────────────────
 
@@ -102,10 +105,35 @@ export async function getCurrentUser(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  return verifySession(token);
+  const session = await verifySession(token);
+  // Sessions issued before clubId existed are treated as signed-out so the
+  // user re-authenticates and gets a complete payload.
+  if (!session || !session.clubId) return null;
+  return session;
 }
 
 /**
- * Returns the session cookie name (used in middleware).
+ * For Server Components / layouts: returns the session or redirects to
+ * /login with the current path preserved as callbackUrl.
  */
-export const SESSION_COOKIE_NAME = SESSION_COOKIE;
+export async function requireUser(callbackUrl?: string): Promise<SessionPayload> {
+  const user = await getCurrentUser();
+  if (!user) {
+    const target = callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/login";
+    redirect(target);
+  }
+  return user;
+}
+
+/**
+ * For Server Actions: throws instead of redirecting so the caller can map
+ * the error to an ActionResult. Every mutating action starts with this.
+ */
+export async function requireRole(...roles: Role[]): Promise<SessionPayload> {
+  const user = await getCurrentUser();
+  if (!user) throw new AuthError("UNAUTHENTICATED");
+  if (roles.length > 0 && !roles.includes(user.role)) throw new AuthError("FORBIDDEN");
+  return user;
+}
+
+export { SESSION_COOKIE_NAME };

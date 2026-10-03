@@ -19,9 +19,9 @@ import { ShieldCheck, Users, Activity, CheckCircle2, Clock } from "lucide-react"
 export default async function AdminHealthPage() {
   const user = await getCurrentUser();
 
-  // Middleware already blocks non-admins, but guard here too
-  if (!user || user.role !== "ADMIN") {
-    redirect("/dashboard?error=forbidden");
+  // Middleware and the admin layout already block non-owners, but guard here too
+  if (!user || user.role !== "OWNER") {
+    redirect("/app?error=forbidden");
   }
 
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

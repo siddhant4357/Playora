@@ -1,4 +1,4 @@
-# 🚀 LDXODOO – Modern & Beautiful Inventory Management
+# Yolla — Sports Club Management System (Odoo Hackathon)
 Automated Replenishments, Real-Time Warehouse Analytics & Seamless Operations  
 **[Features](#-ui-screenshots--features) • [Installation](#%EF%B8%8F-installation--setup) • [Architecture](#-performance--technologies) • [Actions](#-server-actions-snapshot)**
 

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * app/dashboard/settings/SettingsForm.tsx
+ * components/account/SettingsForm.tsx
  *
  * Client component for the profile settings form.
  */

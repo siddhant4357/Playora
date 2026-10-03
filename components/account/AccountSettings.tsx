@@ -1,7 +1,8 @@
 /**
- * app/dashboard/settings/page.tsx
+ * components/account/AccountSettings.tsx
  *
- * User settings page — profile info, optional fields, password change.
+ * Account settings — profile info, optional fields, password change.
+ * Rendered by /account (staff shell) and /me/profile (member shell).
  */
 
 import { getCurrentUser } from "@/lib/auth";
@@ -11,7 +12,7 @@ import { SettingsForm } from "./SettingsForm";
 import { Key, User } from "lucide-react";
 import Link from "next/link";
 
-export default async function SettingsPage() {
+export async function AccountSettings() {
   const session = await getCurrentUser();
   if (!session) redirect("/login");
 
