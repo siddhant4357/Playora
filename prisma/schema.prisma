@@ -83,6 +83,9 @@ model Club {
   tabs         BarTab[]
   shifts       Shift[]
   leads        Lead[]
+  invoices     Invoice[]
+  payables     Payable[]
+  reportShares ReportShare[]
 
   @@map("clubs")
 }
@@ -209,6 +212,8 @@ model Member {
   tabs             BarTab[]
   lead             Lead?
   memberNotes      MemberNote[]
+  invoices         Invoice[]
+  payables         Payable[]
 
   @@index([clubId, phone])
   @@index([clubId, status])
@@ -393,7 +398,10 @@ enum TxSource {
   MEMBERSHIP
   COACHING
   EVENT
+  CORPORATE
   REFUND
+  PAYROLL
+  SUPPLIER
   OTHER
 }
 
@@ -426,6 +434,8 @@ model Transaction {
   createdAt   DateTime    @default(now())
 
   booking     Booking?
+  invoice     Invoice?
+  payable     Payable?
 
   @@index([clubId, createdAt])
   @@index([clubId, source])
@@ -503,7 +513,7 @@ model MemberNote {
   @@map("member_notes")
 }
 
-// ───────────────────────── Shop & inventory ─────────────────────────
+// ───────────────────────���─ Shop & inventory ─────────────────────────
 
 enum ProductCategory {
   RACKET
@@ -860,6 +870,137 @@ model LeadActivity {
 
   @@index([leadId, createdAt])
   @@map("lead_activities")
+}
+
+// ───────────────────────── Finance ─────────────────────────
+
+enum InvoiceKind {
+  MEMBERSHIP
+  CORPORATE
+  OTHER
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PAID
+  VOID
+}
+
+// Receivables. Paying an invoice posts exactly one IN Transaction; the
+// dashboard never reads invoices for revenue, only the ledger.
+model Invoice {
+  id            String        @id @default(cuid())
+  hashId        Int           @unique @default(autoincrement())
+  clubId        String
+  club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  invoiceNo     String        @unique
+  kind          InvoiceKind
+  status        InvoiceStatus @default(ISSUED)
+
+  memberId      String?
+  member        Member?       @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  billToName    String
+  billToEmail   String?
+  billToPhone   String?
+  billToAddress String?
+  billToGstin   String?
+
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  subtotal      Int           // paise, ex-tax
+  tax           Int
+  total         Int
+  notes         String?
+
+  paidAt        DateTime?
+  paymentMode   PaymentMode?
+  transactionId String?       @unique
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  voidReason    String?
+
+  items         InvoiceItem[]
+  createdById   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([clubId, status])
+  @@index([clubId, issueDate])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  qty         Int
+  unitPrice   Int     // paise, ex-tax
+  taxRatePct  Int
+  amount      Int     // qty * unitPrice
+  tax         Int
+  sortOrder   Int     @default(0)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+enum PayableKind {
+  SUPPLIER
+  SALARY
+  REFUND
+  TAX
+  OTHER
+}
+
+enum PayableStatus {
+  PENDING
+  PAID
+  VOID
+}
+
+// "What do we owe?" Paying one posts exactly one OUT Transaction.
+model Payable {
+  id            String        @id @default(cuid())
+  hashId        Int           @unique @default(autoincrement())
+  clubId        String
+  club          Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  kind          PayableKind
+  status        PayableStatus @default(PENDING)
+  payee         String
+  description   String
+  reference     String?       // supplier bill no, payroll month
+  amount        Int           // paise
+  dueDate       DateTime
+
+  memberId      String?
+  member        Member?       @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  paidAt        DateTime?
+  paymentMode   PaymentMode?
+  transactionId String?       @unique
+  transaction   Transaction?  @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  createdById   String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([clubId, status, dueDate])
+  @@map("payables")
+}
+
+// Read-only shareable report links (owner → accountant / partner).
+model ReportShare {
+  id        String   @id @default(cuid())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  token     String   @unique @default(cuid())
+  label     String
+  period    String   // "month" | "week" | "today"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@map("report_shares")
 }
 
 model PasswordResetToken {
