@@ -17,6 +17,7 @@ import {
   Store,
   Boxes,
   PackageCheck,
+  Wrench,
   Wine,
   ChefHat,
   Receipt,
@@ -66,6 +67,7 @@ const SHOP: NavSection = {
     { label: "Counter sale", href: "/shop-pos", icon: Store, exact: true },
     { label: "Inventory", href: "/shop-pos/inventory", icon: Boxes },
     { label: "Orders", href: "/shop-pos/orders", icon: PackageCheck },
+    { label: "Services", href: "/shop-pos/services", icon: Wrench },
   ],
 };
 

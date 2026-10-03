@@ -5,10 +5,12 @@ import useSWR from "swr";
 import { Input } from "@/components/ui/input";
 import { formatPaise } from "@/lib/money";
 
-type Hit = { id: string; firstName: string; lastName: string; memberCode: string; creditBalance: number; plan: { name: string } | null };
+type Hit = { id: string; firstName: string; lastName: string; memberCode: string; creditBalance: number; plan: { name: string; shopDiscountPct?: number; barDiscountPct?: number } | null };
 const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<Hit[]>);
 
-export function MemberPicker({ onPick, placeholder = "Attach member (name, phone, code)" }: { onPick: (m: { id: string; name: string; creditBalance: number }) => void; placeholder?: string }) {
+export type PickedMember = { id: string; name: string; creditBalance: number; plan: string | null; shopDiscountPct: number; barDiscountPct: number };
+
+export function MemberPicker({ onPick, placeholder = "Attach member (name, phone, code)" }: { onPick: (m: PickedMember) => void; placeholder?: string }) {
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
   useEffect(() => {
@@ -29,7 +31,7 @@ export function MemberPicker({ onPick, placeholder = "Attach member (name, phone
                 role="option"
                 aria-selected={false}
                 onClick={() => {
-                  onPick({ id: m.id, name: `${m.firstName} ${m.lastName}`, creditBalance: m.creditBalance });
+                  onPick({ id: m.id, name: `${m.firstName} ${m.lastName}`, creditBalance: m.creditBalance, plan: m.plan?.name ?? null, shopDiscountPct: m.plan?.shopDiscountPct ?? 0, barDiscountPct: m.plan?.barDiscountPct ?? 0 });
                   setQ("");
                 }}
                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-black/[0.03] dark:hover:bg-white/[0.04]"

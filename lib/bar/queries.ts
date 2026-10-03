@@ -73,7 +73,7 @@ export async function searchMembers(clubId: string, q: string) {
   if (q.trim().length < 2) return [];
   return prisma.member.findMany({
     where: { clubId, OR: [{ firstName: { contains: q, mode: "insensitive" } }, { lastName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }, { memberCode: { contains: q, mode: "insensitive" } }] },
-    select: { id: true, firstName: true, lastName: true, memberCode: true, creditBalance: true, plan: { select: { name: true } } },
+    select: { id: true, firstName: true, lastName: true, memberCode: true, creditBalance: true, plan: { select: { name: true, shopDiscountPct: true, barDiscountPct: true } } },
     take: 8,
   });
 }
