@@ -1,0 +1,817 @@
+﻿@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Odoo Brand Tokens (light mode)
+   Palette: https://www.odoo.com/brand-assets
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+:root {
+  /* --- Odoo primary (aubergine purple) --- */
+  --color-primary-50:  #f5f0f3;
+  --color-primary-100: #e8dde4;
+  --color-primary-200: #d4bccb;
+  --color-primary-300: #b990a8;
+  --color-primary-400: #9b6987;
+  --color-primary-500: #714B67;   /* main brand */
+  --color-primary-600: #5C3B54;
+  --color-primary-700: #482d42;
+  --color-primary-800: #341f30;
+  --color-primary-900: #20121d;
+
+  /* --- Odoo accent (teal) --- */
+  --color-accent-500:  #00A09D;
+  --color-accent-600:  #008280;
+
+  /* --- Semantic --- */
+  --color-bg:      #F0EEF0;   /* Odoo backend bg: very light grey */
+  --color-surface: #FFFFFF;
+  --color-danger:  #e74c3c;
+  --color-success: #27ae60;
+  --color-warning: #e67e22;
+  --color-info:    #2980b9;
+
+  /* --- Text (Odoo-authentic neutral greys) --- */
+  --color-text:          #333333;   /* Odoo primary text â€” dark grey, not black */
+  --color-text-muted:    #888888;   /* Odoo secondary/muted text */
+  --color-text-subtle:   #aaaaaa;   /* Odoo placeholder/disabled text */
+
+  /* --- Border (Odoo uses very light grey borders) --- */
+  --color-border:        #e0e0e0;
+  --color-border-strong: #c8c8c8;
+
+  /* --- Spacing scale (8px base) --- */
+  --space-1: 0.25rem;  /* 4px  */
+  --space-2: 0.5rem;   /* 8px  */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;    /* 48px */
+
+  /* --- Radius (12px base) --- */
+  --radius-sm:   0.5rem;   /* 8px  */
+  --radius-md:   0.75rem;  /* 12px */
+  --radius-lg:   1rem;     /* 16px */
+  --radius-xl:   1.5rem;   /* 24px */
+  --radius-full: 9999px;
+
+  /* â”€â”€ shadcn/ui token aliases (keeps shadcn components themed) â”€â”€ */
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card:       var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover:    var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary:    var(--color-primary-500);
+  --primary-foreground: #ffffff;
+  --secondary:  var(--color-primary-100);
+  --secondary-foreground: var(--color-primary-700);
+  --muted:      #f5f5f5;  /* neutral light grey */
+  --muted-foreground: var(--color-text-muted);
+  --accent:     var(--color-accent-500);
+  --accent-foreground: #ffffff;
+  --destructive: var(--color-danger);
+  --border:     var(--color-border);
+  --input:      var(--color-border);
+  --ring:       var(--color-primary-400);
+  --radius:     0.75rem;
+
+  /* chart colors mapped to Odoo palette */
+  --chart-1: var(--color-primary-500);
+  --chart-2: var(--color-accent-500);
+  --chart-3: var(--color-primary-300);
+  --chart-4: #f59e0b;
+  --chart-5: #6366f1;
+
+  --sidebar: #FFFFFF;  /* Odoo sidebar is plain white */
+  --sidebar-foreground: var(--color-text);
+  --sidebar-primary: var(--color-primary-500);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--color-primary-50);
+  --sidebar-accent-foreground: var(--color-primary-700);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-primary-400);
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Theme map (Tailwind v4 inline)
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Roboto Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --color-primary:            var(--color-primary-500);
+  --color-primary-foreground: #ffffff;
+  --color-accent:             var(--color-accent-500);
+  --color-accent-foreground:  #ffffff;
+
+  --color-sidebar:                   var(--sidebar);
+  --color-sidebar-ring:              var(--sidebar-ring);
+  --color-sidebar-border:            var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent:            var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary:           var(--sidebar-primary);
+  --color-sidebar-foreground:        var(--sidebar-foreground);
+
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+
+  --color-ring:        var(--ring);
+  --color-input:       var(--input);
+  --color-border:      var(--border);
+  --color-destructive: var(--destructive);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted:       var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary:   var(--secondary);
+  --color-card-foreground: var(--card-foreground);
+  --color-card:        var(--card);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover:     var(--popover);
+
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Base resets
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50 box-border;
+  }
+  body {
+    font-family: "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-size: 0.875rem;     /* 14px â€” Odoo backend default */
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Odoo-style headings: medium weight, no negative tracking */
+  h1 {
+    font-size: 1.5rem;      /* 24px */
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0;
+    color: var(--color-text);
+  }
+  h2 {
+    font-size: 1.125rem;    /* 18px */
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0;
+    color: var(--color-text);
+  }
+  h3, h4, h5, h6 {
+    font-size: 0.9375rem;   /* 15px */
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+    color: var(--color-text);
+  }
+  a {
+    color: var(--color-primary-500);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+  a:hover { color: var(--color-primary-600); }
+
+  /* â”€â”€ Fix Chrome Autofill on dark inputs â”€â”€ */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s !important;
+    -webkit-text-fill-color: var(--color-text) !important;
+  }
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Component base classes
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@layer components {
+
+  /* â”€â”€ Card â”€â”€ */
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    transition: box-shadow 200ms ease;
+  }
+  .card:hover { box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.08); }
+
+  /* â”€â”€ Buttons â”€â”€ */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-5);
+    background: var(--color-primary-500);
+    color: #ffffff;
+    border: 1px solid var(--color-primary-500);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 150ms ease, box-shadow 150ms ease, transform 80ms ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .btn-primary:hover {
+    background: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+    box-shadow: 0 2px 8px rgb(113 75 103 / 0.4);
+  }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-5);
+    background: transparent;
+    color: var(--color-primary-500);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease;
+    user-select: none;
+  }
+  .btn-secondary:hover {
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-300);
+  }
+  .btn-secondary:active { transform: translateY(1px); }
+
+  /* â”€â”€ Input â”€â”€ */
+  .input {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    outline: none;
+  }
+  .input::placeholder { color: var(--color-text-subtle); }
+  .input:focus {
+    border-color: var(--color-primary-400);
+    box-shadow: 0 0 0 3px rgb(113 75 103 / 0.12);
+  }
+  .input:invalid, .input[aria-invalid="true"] {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px rgb(220 38 38 / 0.12);
+  }
+
+  /* â”€â”€ Badge â”€â”€ */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.625rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .badge-primary {
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+  }
+  .badge-success {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  .badge-danger {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+  .badge-warning {
+    background: #fef3c7;
+    color: #b45309;
+  }
+  .badge-info {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  .badge-neutral {
+    background: #f3eff5;
+    color: var(--color-text-muted);
+  }
+
+  /* â”€â”€ Skeleton shimmer â”€â”€ */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #e8e8e8 25%,
+      #f2f2f2 50%,
+      #e8e8e8 75%
+    );
+    background-size: 200% 100%;
+    border-radius: var(--radius-sm);
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* â”€â”€ Form label â”€â”€ */
+  .form-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-1);
+    letter-spacing: 0.01em;
+  }
+
+  /* â”€â”€ Form group â”€â”€ */
+  .form-group { margin-bottom: var(--space-4); }
+
+  /* â”€â”€ Error text â”€â”€ */
+  .field-error {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--color-danger);
+  }
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   Dashboard layout helpers
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@layer utilities {
+  .sidebar-width { width: 240px; }
+  .topbar-height { height: 56px; }
+  .content-area {
+    margin-left: 240px;
+    padding-top: 56px;
+    min-height: 100vh;
+  }
+}
+
+/* --------------------------------------------------------------
+   GLOBAL DARK MODE TOKEN OVERRIDES (for dashboard / auth pages)
+   Mirrors the html.dark variables so Tailwind semantic tokens
+   also flip when the user switches to dark mode.
+-------------------------------------------------------------- */
+html.dark {
+  --color-bg:            #13101e;
+  --color-surface:       #1c1828;
+  --color-border:        #2e2540;
+  --color-border-strong: #3d3052;
+  --color-text:          #e8e3f0;
+  --color-text-muted:    #9b94aa;
+  --color-text-subtle:   #6b6278;
+  color-scheme: dark;
+}
+
+/* Dashboard sidebar & topbar dark overrides */
+html.dark .bg-white {
+  background-color: #1c1828 !important;
+}
+
+html.dark .bg-\[#F0EEF0\] {
+  background-color: #13101e !important;
+}
+
+html.dark .border-\[#e0e0e0\],
+html.dark .border-gray-200,
+html.dark .border-gray-100 {
+  border-color: #2e2540 !important;
+}
+
+html.dark .text-\[\#333333\],
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+  color: #e8e3f0 !important;
+}
+
+html.dark .text-\[\#888888\],
+html.dark .text-gray-500,
+html.dark .text-gray-600 {
+  color: #9b94aa !important;
+}
+
+/* Auth card dark override */
+html.dark .auth-card,
+html.dark .bg-white.rounded {
+  background: #1c1828;
+  border-color: #2e2540;
+}
+
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="text"] {
+  background: #261f35 !important;
+  color: #e8e3f0 !important;
+  border-color: #3d3052 !important;
+}
+
+html.dark input::placeholder {
+  color: #6b6278 !important;
+}
+
+/* Doodle Arrows (for page.tsx) */
+.doodle-arrow {
+  mix-blend-mode: multiply;
+}
+
+html.dark .doodle-arrow {
+  filter: invert(1) grayscale(1) contrast(10) brightness(0.9);
+  mix-blend-mode: screen;
+  opacity: 0.6 !important;
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   BILLBOARD FRAME
+   Light-mode: clean chrome bezel + card
+   Dark-mode:  atmospheric beam uplights
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* Outer wrapper â€” positions the glow, poles and bezel together */
+.billboard-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Overflow visible so the pole/glow can bleed without clipping */
+  overflow: visible;
+}
+
+/* â”€â”€ Single atmospheric bloom (dark-mode only) â”€â”€
+   A single thick radial gradient that sits behind the bezel
+   and bleeds naturally like a screen glowing in a dark room.
+   No child divs needed â€” all rendered via background + ::after. */
+.bb-glow {
+  position: absolute;
+  /* Extend well outside the bezel so edges are never visible */
+  top: -120px;
+  left: -140px;
+  right: -140px;
+  bottom: -160px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity .6s;
+
+  /* Primary plum bloom â€” centered on the screen face */
+  background: radial-gradient(
+    ellipse 55% 45% at 50% 38%,
+    rgba(155, 104, 145, .55) 0%,
+    rgba(113,  75, 103, .30) 30%,
+    rgba( 90,  60,  85, .12) 58%,
+    transparent 80%
+  );
+}
+
+/* Ground cast â€” warm oval puddle below the billboard */
+.bb-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 90px;
+  background: radial-gradient(
+    ellipse 65% 55% at 50% 100%,
+    rgba(113, 75, 103, .30) 0%,
+    rgba( 90, 60,  85, .12) 45%,
+    transparent 75%
+  );
+  filter: blur(14px);
+}
+
+@keyframes screen-breathe {
+  0%, 100% { opacity: .85; }
+  50%       { opacity: 1;   }
+}
+
+/* â”€â”€ Metallic bezel â”€â”€ */
+.bb-bezel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: linear-gradient(175deg, #e8e4ee 0%, #d0cad8 40%, #c4bdd0 100%);
+  border-radius: 18px;
+  padding: 0 6px 6px;
+  box-shadow:
+    0 2px 0 #fff inset,
+    0 -2px 0 #b0a8bc inset,
+    0 12px 40px rgba(20,20,50,.12),
+    0 2px 8px rgba(20,20,50,.08);
+}
+
+/* â”€â”€ Top chrome bar â”€â”€ */
+.bb-topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px 12px 0 0;
+}
+
+.bb-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.bb-dot-r { background: #ff5f57; box-shadow: 0 0 4px #ff5f5788; }
+.bb-dot-y { background: #febc2e; box-shadow: 0 0 4px #febc2e88; }
+.bb-dot-g { background: #28c840; box-shadow: 0 0 4px #28c84088; }
+
+.bb-label {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: #8a7fa0;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+.bb-live {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: #e07a7a;
+  text-transform: uppercase;
+}
+
+@keyframes live-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.bb-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e07a7a;
+  box-shadow: 0 0 6px #e07a7a;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+/* The wh-card when inside the bezel */
+.bb-screen {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(20,20,50,.08);
+  overflow: hidden;
+}
+
+/* â”€â”€ Bottom mounting rail â”€â”€ */
+.bb-rail {
+  height: 10px;
+  background: linear-gradient(180deg, #b0a8bc 0%, #c4bdd0 100%);
+  border-radius: 0 0 6px 6px;
+  margin: 0 20px;
+  box-shadow: 0 3px 6px rgba(20,20,50,.12);
+}
+
+/* â”€â”€ Mounting poles â”€â”€ */
+.bb-poles {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.bb-pole {
+  width: 20px;
+  height: 90px;
+  background: linear-gradient(90deg,
+    #cfc9d9 0%,
+    #e8e4ee 30%,
+    #d0cad8 55%,
+    #b8b2c4 100%);
+  border-radius: 0 0 4px 4px;
+  box-shadow:
+    3px 0 0 rgba(255,255,255,.4) inset,
+    -2px 0 0 rgba(0,0,0,.1) inset;
+  position: relative;
+}
+/* Base plate at bottom of pole */
+.bb-pole::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 12px;
+  background: linear-gradient(180deg, #d0cad8 0%, #b0a8bc 100%);
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgba(20,20,50,.18);
+}
+
+/* â”€â”€ DARK MODE: enable beams + darken bezel â”€â”€ */
+html.dark .bb-glow {
+  opacity: 1;
+  animation: screen-breathe 5s ease-in-out infinite;
+}
+
+html.dark .bb-bezel {
+  background: linear-gradient(175deg, #2a2040 0%, #1e1830 60%, #181428 100%);
+  box-shadow:
+    0 2px 0 #3a2e54 inset,
+    0 -2px 0 #0d0b14 inset,
+    0 0 60px rgba(113,75,103,.25),
+    0 12px 40px rgba(0,0,0,.5);
+}
+
+html.dark .bb-topbar {
+  border-bottom: 1px solid #2e2048;
+}
+
+html.dark .bb-label {
+  color: #6b5e80;
+}
+
+html.dark .bb-rail {
+  background: linear-gradient(180deg, #1e1830 0%, #141020 100%);
+}
+
+html.dark .bb-pole {
+  background: linear-gradient(90deg,
+    #1a1428 0%,
+    #2a2040 30%,
+    #1e1830 55%,
+    #0f0c18 100%);
+  box-shadow:
+    1px 0 0 rgba(113,75,103,.15) inset,
+    -1px 0 0 rgba(0,0,0,.4) inset;
+}
+
+html.dark .bb-pole::after {
+  background: linear-gradient(180deg, #2a2040 0%, #0d0b14 100%);
+  box-shadow: 0 4px 10px rgba(0,0,0,.6);
+}
+
+html.dark .bb-screen {
+  /* Screen looks brighter than surrounding dark bezel â€” like a lit display */
+  background: #1e1a2e !important;
+  box-shadow:
+    0 0 40px rgba(155, 120, 200, .12),
+    0 0 0 1px #3a2e54;
+}
+
+/* Ensure card header inside dark screen is readable */
+html.dark .bb-screen .wh-hd {
+  background: #1a1628;
+  border-bottom-color: #2e2048;
+}
+
+html.dark .bb-screen .app-bar {
+  background: #1a1628;
+}
+
+/* â”€â”€ Mosaic Tile Disappear/Reappear Animation â€” slow, sparse */
+@keyframes tile-blink {
+  0%   { opacity: 1; }
+  40%  { opacity: 1; }
+  47%  { opacity: 0; }
+  73%  { opacity: 0; }
+  80%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+.mosaic-grid .mt {
+  animation: tile-blink 18s infinite linear;
+}
+/* Very spread-out delays across prime numbers â€” at most 1-2 tiles disappear at any moment */
+.mosaic-grid .mt:nth-child(2n)  { animation-delay: -2s;   animation-duration: 20s; }
+.mosaic-grid .mt:nth-child(3n)  { animation-delay: -7s;   animation-duration: 15s; }
+.mosaic-grid .mt:nth-child(5n)  { animation-delay: -13s;  animation-duration: 22s; }
+.mosaic-grid .mt:nth-child(7n)  { animation-delay: -4s;   animation-duration: 25s; }
+.mosaic-grid .mt:nth-child(11n) { animation-delay: -9s;   animation-duration: 19s; }
+.mosaic-grid .mt:nth-child(13n) { animation-delay: -16s;  animation-duration: 28s; }
+.mosaic-grid .mt:nth-child(17n) { animation-delay: -1s;   animation-duration: 16s; }
+
+/* Dark mode: pastel light tiles become dark â€” ensure text is light/visible */
+html.dark .mt[style*="#f1ecf0"],
+html.dark .mt[style*="#e8f4f6"],
+html.dark .mt[style*="#fbf3e5"] {
+  color: #c8c2d4 !important;
+}
+
+/* â”€â”€ Force dark background on wh-card in dark mode (beats home.css hardcoded #fff) â”€â”€ */
+html.dark .wh-card {
+  background: #261f35 !important;
+}
+html.dark .wh-card .wh-hd,
+html.dark .wh-card .app-bar {
+  background: #1f1b2e !important;
+  border-bottom-color: #2e2048 !important;
+}
+html.dark .wh-card .kc {
+  background: #2e2448 !important;
+  border-color: #3a2e54 !important;
+}
+html.dark .bb-screen.wh-card {
+  background: #1e1a2e !important;
+}
+
+/* â”€â”€ Hero screenshot card: was missing dark mode entirely â”€â”€ */
+html.dark .ss-card {
+  background: #1e1a2e !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.45), 0 0 0 1px #2e2048 !important;
+}
+
+/* App bar and toolbar â€” both hardcoded #fff */
+html.dark .ss-card .app-bar,
+html.dark .ss-card .toolbar {
+  background: #1a1628 !important;
+  border-bottom-color: #2e2048 !important;
+}
+
+/* Sidebar â€” hardcoded #fafafa */
+html.dark .ss-card .app-sb {
+  background: #1a1628 !important;
+  border-right-color: #2e2048 !important;
+}
+
+/* Table header cells â€” use var(--surface) which in dark is #1f1b2e â€” fine */
+/* Table body row borders â€” hardcoded #f0f0f0 */
+html.dark .ss-card .at td {
+  border-bottom-color: #2a2040 !important;
+  color: #c8c2d4 !important;
+}
+
+/* Selected rows â€” hardcoded #e8f4f6 */
+html.dark .ss-card .at tr.sel td {
+  background: #2a1f40 !important;
+}
+
+/* Hover rows â€” hardcoded #f8f9fb */
+html.dark .ss-card .at tr:hover td {
+  background: #231c38 !important;
+}
+
+/* Selected + hover */
+html.dark .ss-card .at tr.sel:hover td {
+  background: #321e4a !important;
+}
+
+/* Hide Play button in dark mode completely */
+html.dark .ss-card .play-wrap {
+  display: none !important;
+}
+
+/* Footer white stripe at bottom */
+html.dark .ss-card .at-footer {
+  background: #1a1628 !important;
+}
+
+/* Table wrapper body background */
+html.dark .ss-card .app-tw,
+html.dark .ss-card .app-body {
+  background: #1e1a2e !important;
+}
+
+
+
+
+/* -- Theme Toggle Animation (global) -- */
+.theme-toggle-btn { background: transparent; border: none; cursor: pointer; padding: 8px; border-radius: 50%; color: var(--color-text-muted, var(--body)); transition: background 0.2s, color 0.2s; display: flex; align-items: center; justify-content: center; position: relative; width: 34px; height: 34px; overflow: hidden; }
+.theme-toggle-btn:hover { background: var(--color-surface, var(--surface)); color: var(--color-text, var(--ink)); }
+.toggle-icon-wrap { position: relative; width: 18px; height: 18px; display: block; }
+.icon-sun, .icon-moon { position: absolute; top: 0; left: 0; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+.theme-toggle-btn.is-light .icon-sun { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+.theme-toggle-btn.is-light .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+.theme-toggle-btn.is-dark .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+.theme-toggle-btn.is-dark .icon-moon { opacity: 0; transform: rotate(90deg) scale(0.5); }

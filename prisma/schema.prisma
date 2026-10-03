@@ -1,0 +1,108 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Prisma Schema — LDXODOO Hackathon Foundation
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ID CONVENTION (follow this for every model added in future phases):
+//
+//   id     String @id @default(cuid())   — primary, external-safe opaque ID
+//                                          used in URLs, API responses, and
+//                                          foreign-key relations. Never expose
+//                                          hashId in URLs.
+//
+//   hashId Int    @unique @default(autoincrement())
+//                                       — sequential numeric alias. Used for
+//                                          display purposes only (e.g. "Order #42")
+//                                          so humans can reference records without
+//                                          leaking internal counts or insertion order
+//                                          in security-sensitive contexts.
+//
+// Both fields are on every model. Do NOT use just one.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  hashId       Int      @unique @default(autoincrement())
+
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(MEMBER)
+
+  // Optional profile fields
+  dob          DateTime?
+  gender       String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  activityLogs        ActivityLog[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+// ActivityLog: lightweight audit trail.
+// Tracks WHO did WHAT to WHICH entity and WHEN.
+// Old/new state stored as Json blobs for diff rendering.
+// Replaces a full Prometheus/Grafana observability stack as a scope decision
+// for the hackathon — the /admin/health page consumes this table directly.
+model ActivityLog {
+  id        String   @id @default(cuid())
+  hashId    Int      @unique @default(autoincrement())
+
+  // What happened (e.g. "USER_SIGNUP", "USER_LOGIN", "RECORD_CREATED")
+  action    String
+
+  // The type of resource affected (e.g. "User", "Product", "SaleOrder")
+  entity    String
+
+  // The cuid() of the affected record; nullable for system-level events
+  entityId  String?
+
+  // JSON snapshots of state before and after the action
+  oldData   Json?
+  newData   Json?
+
+  // Request metadata for security audit
+  ipAddress String?
+  userAgent String?
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
