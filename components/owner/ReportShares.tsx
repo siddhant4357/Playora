@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Link2, Trash2 } from "lucide-react";
+import { Copy, ExternalLink, Link2, Trash2 } from "lucide-react";
 import { createReportShareAction, revokeReportShareAction } from "@/lib/actions/finance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +85,9 @@ export function ReportShares({ shares }: { shares: Share[] }) {
                   {s.period === "today" ? "Today" : s.period === "week" ? "This week" : "This month"} · expires {new Date(s.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                 </span>
               </div>
+              <Button variant="ghost" size="icon" aria-label="Open link" nativeButton={false} render={<a href={`/r/${s.token}`} target="_blank" rel="noreferrer" />}>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
               <Button variant="ghost" size="icon" aria-label="Copy link" onClick={() => copy(s.token)}>
                 <Copy className="h-4 w-4" />
               </Button>

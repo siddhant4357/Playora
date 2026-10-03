@@ -51,43 +51,45 @@ export default async function TaxPage({ searchParams }: { searchParams: Promise<
               No taxable sales in this period.
             </p>
           ) : (
-            <table className="w-full text-sm tabular-nums">
-              <thead>
-                <tr className="text-left text-xs" style={{ color: "var(--color-text-muted)" }}>
-                  <th className="py-2 pr-3 font-medium">Rate</th>
-                  <th className="py-2 pr-3 text-right font-medium">Taxable</th>
-                  <th className="py-2 pr-3 text-right font-medium">CGST</th>
-                  <th className="py-2 pr-3 text-right font-medium">SGST</th>
-                  <th className="py-2 pl-3 text-right font-medium">Total GST</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.byRate.map((r) => (
-                  <tr key={r.ratePct} style={{ borderTop: "1px solid var(--color-border)" }}>
-                    <td className="py-2 pr-3 font-semibold">{r.ratePct}%</td>
-                    <td className="py-2 pr-3 text-right">{formatPaise(r.taxable)}</td>
-                    <td className="py-2 pr-3 text-right" style={{ color: "var(--color-text-muted)" }}>
-                      {formatPaise(Math.floor(r.tax / 2))}
-                    </td>
-                    <td className="py-2 pr-3 text-right" style={{ color: "var(--color-text-muted)" }}>
-                      {formatPaise(r.tax - Math.floor(r.tax / 2))}
-                    </td>
-                    <td className="py-2 pl-3 text-right font-semibold">{formatPaise(r.tax)}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm tabular-nums">
+                <thead>
+                  <tr className="text-left text-xs" style={{ color: "var(--color-text-muted)" }}>
+                    <th className="py-2 pr-2 font-medium">Rate</th>
+                    <th className="py-2 pr-2 text-right font-medium">Taxable</th>
+                    <th className="py-2 pr-2 text-right font-medium">CGST</th>
+                    <th className="py-2 pr-2 text-right font-medium">SGST</th>
+                    <th className="py-2 pl-2 text-right font-medium">GST</th>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="font-bold" style={{ borderTop: "2px solid var(--color-border-strong)" }}>
-                  <td className="py-2 pr-3">Total</td>
-                  <td className="py-2 pr-3 text-right">{formatPaise(report.totalTaxable)}</td>
-                  <td className="py-2 pr-3 text-right">{formatPaise(Math.floor(report.totalTax / 2))}</td>
-                  <td className="py-2 pr-3 text-right">{formatPaise(report.totalTax - Math.floor(report.totalTax / 2))}</td>
-                  <td className="py-2 pl-3 text-right" style={{ color: "var(--color-primary-500)" }}>
-                    {formatPaise(report.totalTax)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                </thead>
+                <tbody>
+                  {report.byRate.map((r) => (
+                    <tr key={r.ratePct} style={{ borderTop: "1px solid var(--color-border)" }}>
+                      <td className="py-2 pr-2 font-semibold">{r.ratePct}%</td>
+                      <td className="whitespace-nowrap py-2 pr-2 text-right">{formatPaise(r.taxable)}</td>
+                      <td className="whitespace-nowrap py-2 pr-2 text-right" style={{ color: "var(--color-text-muted)" }}>
+                        {formatPaise(Math.floor(r.tax / 2))}
+                      </td>
+                      <td className="whitespace-nowrap py-2 pr-2 text-right" style={{ color: "var(--color-text-muted)" }}>
+                        {formatPaise(r.tax - Math.floor(r.tax / 2))}
+                      </td>
+                      <td className="whitespace-nowrap py-2 pl-2 text-right font-semibold">{formatPaise(r.tax)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="font-bold" style={{ borderTop: "2px solid var(--color-border-strong)" }}>
+                    <td className="py-2 pr-2">Total</td>
+                    <td className="whitespace-nowrap py-2 pr-2 text-right">{formatPaise(report.totalTaxable)}</td>
+                    <td className="whitespace-nowrap py-2 pr-2 text-right">{formatPaise(Math.floor(report.totalTax / 2))}</td>
+                    <td className="whitespace-nowrap py-2 pr-2 text-right">{formatPaise(report.totalTax - Math.floor(report.totalTax / 2))}</td>
+                    <td className="whitespace-nowrap py-2 pl-2 text-right" style={{ color: "var(--color-primary-500)" }}>
+                      {formatPaise(report.totalTax)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           )}
         </Panel>
 
