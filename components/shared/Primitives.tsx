@@ -25,7 +25,7 @@ export function PageHeader({ eyebrow, title, subtitle, actions }: { eyebrow?: st
 export function Panel({ title, children, className, actions, style }: { title?: ReactNode; children: ReactNode; className?: string; actions?: ReactNode; style?: CSSProperties }) {
   return (
     <section
-      className={cn("flex flex-col gap-3 rounded-2xl p-4", className)}
+      className={cn("flex min-w-0 flex-col gap-3 rounded-2xl p-4", className)}
       style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", ...style }}
     >
       {(title || actions) && (
@@ -43,9 +43,11 @@ export function Panel({ title, children, className, actions, style }: { title?: 
   );
 }
 
-export function Stat({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "default" | "success" | "warning" | "danger" }) {
-  const color =
-    tone === "success" ? "var(--color-success)" : tone === "warning" ? "var(--color-warning)" : tone === "danger" ? "var(--color-danger)" : "var(--color-text)";
+type Tone = "default" | "success" | "warning" | "danger";
+const TONE_COLOR: Record<Tone, string> = { default: "var(--color-text)", success: "var(--color-success)", warning: "var(--color-warning)", danger: "var(--color-danger)" };
+
+export function Stat({ label, value, hint, tone, hintTone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: Tone; hintTone?: Tone }) {
+  const color = TONE_COLOR[tone ?? "default"];
   return (
     <div className="flex flex-col gap-1 rounded-2xl p-4" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
       <span className="text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
@@ -55,7 +57,7 @@ export function Stat({ label, value, hint, tone }: { label: string; value: React
         {value}
       </span>
       {hint && (
-        <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+        <span className="text-xs" style={{ color: hintTone && hintTone !== "default" ? TONE_COLOR[hintTone] : "var(--color-text-muted)" }}>
           {hint}
         </span>
       )}

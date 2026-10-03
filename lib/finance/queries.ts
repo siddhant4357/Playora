@@ -16,7 +16,12 @@ export interface PeriodRange {
   days: number;
 }
 
-/** Club-local calendar periods: today, Monday-to-now, 1st-to-now, each with the equivalent previous window. */
+/**
+ * Club-local calendar periods: today, Monday-to-now, 1st-to-now. The previous
+ * window is like-for-like — the same number of days into the previous week or
+ * month — so "+12% vs last month" on the 3rd compares the 1st–3rd of each month,
+ * not three days against thirty.
+ */
 export function periodRange(period: Period, tz: string, now = new Date()): PeriodRange {
   const today = todayKey(tz);
   const todayStart = dayStart(today, tz);
@@ -30,32 +35,21 @@ export function periodRange(period: Period, tz: string, now = new Date()): Perio
     const dow = (parts.weekday + 6) % 7; // Monday = 0
     const weekStartKey = addDaysToKey(today, -dow);
     const from = dayStart(weekStartKey, tz);
-    return { period, from, to: tomorrow, prevFrom: dayStart(addDaysToKey(weekStartKey, -7), tz), prevTo: from, label: "This week", prevLabel: "last week", days: dow + 1 };
+    const prevStartKey = addDaysToKey(weekStartKey, -7);
+    return { period, from, to: tomorrow, prevFrom: dayStart(prevStartKey, tz), prevTo: dayStart(addDaysToKey(prevStartKey, dow + 1), tz), label: "This week", prevLabel: "same days last week", days: dow + 1 };
   }
   const monthStartKey = `${parts.year}-${String(parts.month).padStart(2, "0")}-01`;
   const from = dayStart(monthStartKey, tz);
   const prevMonth = parts.month === 1 ? { y: parts.year - 1, m: 12 } : { y: parts.year, m: parts.month - 1 };
-  const prevFrom = dayStart(`${prevMonth.y}-${String(prevMonth.m).padStart(2, "0")}-01`, tz);
-  return { period, from, to: tomorrow, prevFrom, prevTo: from, label: "This month", prevLabel: "last month", days: parts.day };
+  const prevStartKey = `${prevMonth.y}-${String(prevMonth.m).padStart(2, "0")}-01`;
+  const prevFrom = dayStart(prevStartKey, tz);
+  const prevTo = dayStart(addDaysToKey(prevStartKey, parts.day), tz);
+  return { period, from, to: tomorrow, prevFrom, prevTo: prevTo < from ? prevTo : from, label: "This month", prevLabel: `first ${parts.day} ${parts.day === 1 ? "day" : "days"} of last month`, days: parts.day };
 }
 
 // ───────────────────────── Revenue ─────────────────────────
 
-export const SOURCE_LABEL: Record<TxSource, string> = {
-  COURT: "Courts",
-  SHOP: "Shop",
-  BAR: "Bar & café",
-  MEMBERSHIP: "Memberships",
-  COACHING: "Coaching",
-  EVENT: "Events",
-  CORPORATE: "Corporate",
-  REFUND: "Refunds",
-  PAYROLL: "Payroll",
-  SUPPLIER: "Suppliers",
-  OTHER: "Other",
-};
-
-export const MODE_LABEL: Record<PaymentMode, string> = { CASH: "Cash", CARD: "Card", UPI: "UPI", ONLINE: "Online", CREDIT: "Credit", COMPLIMENTARY: "Comp" };
+export { MODE_LABEL, SOURCE_LABEL } from "@/lib/finance/labels";
 
 export interface RevenueSummary {
   revenue: number;

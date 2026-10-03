@@ -20,10 +20,11 @@
  * Run with:  pnpm db:seed   (requires DATABASE_URL + applied migrations)
  */
 
-import { PrismaClient, type Role } from "../generated/prisma/client";
+import { PrismaClient, type Prisma, type Role, type TxSource } from "../generated/prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
+import { localToUtc, toLocalParts } from "../lib/time";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -386,6 +387,182 @@ async function seedLeads(clubId: string, plans: { id: string; tier: string; pric
   }
 }
 
+// ───────────────────────── Finance (history, invoices, payables) ─────────────────────────
+
+/** Deterministic pseudo-random so re-seeds are stable. */
+function rng(seed: number) {
+  let s = seed >>> 0;
+  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32);
+}
+
+function splitTax(gross: number, ratePct: number) {
+  const net = Math.round((gross * 100) / (100 + ratePct));
+  return gross - net;
+}
+
+/**
+ * Six weeks of back-dated ledger rows so the owner dashboard has a real
+ * trend line on first open. Rows are tagged refType="SeedHistory" so this
+ * stays idempotent and is easy to tell apart from engine-posted rows.
+ */
+async function seedLedgerHistory(clubId: string, tz: string, courts: { id: string; name: string }[], members: { id: string; firstName: string; lastName: string }[], userId: string) {
+  const existing = await prisma.transaction.count({ where: { clubId, refType: "SeedHistory" } });
+  if (existing > 0) return existing;
+
+  const rand = rng(20261003);
+  const pick = <T,>(arr: readonly T[]) => arr[Math.floor(rand() * arr.length)];
+  const modes = ["UPI", "UPI", "UPI", "CARD", "CASH", "ONLINE"] as const;
+  const rows: Prisma.TransactionCreateManyInput[] = [];
+  const now = new Date();
+
+  // Court sessions become real COMPLETED bookings so utilisation and the
+  // heatmap reflect the same history as the ledger.
+  const courtTxns: Prisma.TransactionCreateManyInput[] = [];
+  const courtSlots: { courtId: string; startsAt: Date; memberId: string | null; walkInName: string | null; gross: number }[] = [];
+  for (let d = 42; d >= 1; d--) {
+    const day = new Date(now.getTime() - d * 86_400_000);
+    const local = toLocalParts(day, tz);
+    const weekend = [0, 6].includes(local.weekday);
+    const bump = weekend ? 1.6 : 1;
+
+    for (const court of courts) {
+      for (let hour = 6; hour < 23; hour++) {
+        const evening = hour >= 17 && hour <= 21;
+        const morning = hour >= 7 && hour <= 10;
+        const p = evening ? 0.7 : weekend && morning ? 0.55 : morning ? 0.3 : 0.18;
+        if (rand() >= p) continue;
+        const gross = evening ? pick([100000, 120000, 150000]) : pick([60000, 80000, 100000]);
+        const member = rand() < 0.65 ? pick(members) : null;
+        const startsAt = localToUtc(tz, local.year, local.month, local.day, hour);
+        courtSlots.push({ courtId: court.id, startsAt, memberId: member?.id ?? null, walkInName: member ? null : pick(["Walk-in", "Guest", "Drop-in"]), gross });
+        courtTxns.push({ clubId, source: "COURT", direction: "IN", amount: gross, tax: splitTax(gross, 18), paymentMode: pick(modes), memberId: member?.id ?? null, refType: "SeedHistory", description: `Court booking · ${court.name}`, byUserId: userId, createdAt: startsAt });
+      }
+    }
+
+    const barTabs = Math.round((5 + rand() * 7) * bump);
+    for (let i = 0; i < barTabs; i++) {
+      const gross = 15000 + Math.round(rand() * 120000);
+      rows.push({ clubId, source: "BAR", direction: "IN", amount: gross, tax: splitTax(gross, 5), paymentMode: pick(modes), memberId: rand() < 0.5 ? pick(members).id : null, refType: "SeedHistory", description: "Bar tab settled", byUserId: userId, createdAt: new Date(day.getTime() + (11 + Math.floor(rand() * 11)) * 3_600_000) });
+    }
+
+    const shopSales = Math.round(rand() * 3 * bump);
+    for (let i = 0; i < shopSales; i++) {
+      const gross = pick([35000, 89900, 249900, 599900, 1299900]);
+      rows.push({ clubId, source: "SHOP", direction: "IN", amount: gross, tax: splitTax(gross, gross >= 100000 ? 18 : 12), paymentMode: pick(modes), memberId: rand() < 0.5 ? pick(members).id : null, refType: "SeedHistory", description: "Pro shop sale", byUserId: userId, createdAt: new Date(day.getTime() + (10 + Math.floor(rand() * 10)) * 3_600_000) });
+    }
+
+    if (rand() < 0.25) {
+      const gross = pick([299900, 599900, 1199900]);
+      rows.push({ clubId, source: "MEMBERSHIP", direction: "IN", amount: gross, tax: splitTax(gross, 18), paymentMode: pick(["UPI", "CARD", "ONLINE"] as const), memberId: pick(members).id, refType: "SeedHistory", description: "Membership renewal", byUserId: userId, createdAt: new Date(day.getTime() + 12 * 3_600_000) });
+    }
+    if (rand() < 0.15) {
+      const gross = pick([150000, 250000, 400000]);
+      rows.push({ clubId, source: "COACHING", direction: "IN", amount: gross, tax: splitTax(gross, 18), paymentMode: pick(modes), memberId: pick(members).id, refType: "SeedHistory", description: "Coaching package", byUserId: userId, createdAt: new Date(day.getTime() + 16 * 3_600_000) });
+    }
+  }
+
+  // Outgoings: weekly supplier runs, one payroll, one corporate booking in.
+  for (let w = 6; w >= 1; w--) {
+    const day = new Date(now.getTime() - w * 7 * 86_400_000);
+    rows.push({ clubId, source: "SUPPLIER", direction: "OUT", amount: 180000 + Math.round(rand() * 120000), tax: 0, paymentMode: "ONLINE", refType: "SeedHistory", description: "Supplier bill · Beverages & kitchen", byUserId: userId, createdAt: day });
+  }
+  const payday = new Date(now.getFullYear(), now.getMonth() - 1, 1, 10);
+  rows.push({ clubId, source: "PAYROLL", direction: "OUT", amount: 32500000, tax: 0, paymentMode: "ONLINE", refType: "SeedHistory", description: "Salaries · month before last", byUserId: userId, createdAt: payday });
+  rows.push({ clubId, source: "CORPORATE", direction: "IN", amount: 4500000, tax: splitTax(4500000, 18), paymentMode: "ONLINE", refType: "SeedHistory", description: "Corporate tournament · Infotech Ltd", byUserId: userId, createdAt: new Date(now.getTime() - 10 * 86_400_000) });
+
+  await prisma.transaction.createMany({ data: rows });
+
+  const created = await prisma.transaction.createManyAndReturn({ data: courtTxns, select: { id: true } });
+  await prisma.booking.createMany({
+    data: courtSlots.map((s, i) => ({
+      clubId,
+      courtId: s.courtId,
+      memberId: s.memberId,
+      walkInName: s.walkInName,
+      startsAt: s.startsAt,
+      endsAt: new Date(s.startsAt.getTime() + 3_600_000),
+      kind: "PRIVATE" as const,
+      status: "COMPLETED" as const,
+      source: s.memberId ? ("APP" as const) : ("FRONT_DESK" as const),
+      listPrice: s.gross,
+      priceCharged: s.gross,
+      priceReason: "Seed history",
+      transactionId: created[i].id,
+      checkedInAt: s.startsAt,
+      createdById: userId,
+      createdAt: new Date(s.startsAt.getTime() - 86_400_000),
+    })),
+  });
+  return rows.length + courtTxns.length;
+}
+
+async function seedInvoices(clubId: string, members: { id: string; firstName: string; lastName: string; email: string | null; phone: string }[], userId: string) {
+  const count = await prisma.invoice.count({ where: { clubId } });
+  if (count > 0) return count;
+  const now = Date.now();
+  const stamp = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+  const specs = [
+    { kind: "CORPORATE" as const, billToName: "Infotech Ltd", billToEmail: "accounts@infotech.example", billToGstin: "27AABCI1234F1Z5", billToAddress: "Hiranandani Gardens, Powai, Mumbai 400076", daysAgo: 3, dueIn: 15, status: "ISSUED" as const, items: [{ description: "Corporate tournament · 4 courts × 6 hrs", qty: 24, unitPrice: 150000, taxRatePct: 18 }, { description: "Catering · 60 covers", qty: 60, unitPrice: 45000, taxRatePct: 5 }] },
+    { kind: "MEMBERSHIP" as const, member: members[1], daysAgo: 20, dueIn: 7, status: "ISSUED" as const, items: [{ description: "Gold membership · quarterly", qty: 1, unitPrice: 1499900, taxRatePct: 18 }] },
+    { kind: "MEMBERSHIP" as const, member: members[2], daysAgo: 12, dueIn: 7, status: "PAID" as const, items: [{ description: "Silver membership · monthly", qty: 1, unitPrice: 599900, taxRatePct: 18 }] },
+    { kind: "OTHER" as const, billToName: "Powai Padel League", billToEmail: "hello@ppl.example", daysAgo: 30, dueIn: 10, status: "PAID" as const, items: [{ description: "Court block · league nights (Sept)", qty: 8, unitPrice: 240000, taxRatePct: 18 }] },
+  ];
+  for (const s of specs) {
+    const items = s.items.map((l, i) => ({ ...l, amount: l.qty * l.unitPrice, tax: Math.round((l.qty * l.unitPrice * l.taxRatePct) / 100), sortOrder: i }));
+    const subtotal = items.reduce((a, l) => a + l.amount, 0);
+    const tax = items.reduce((a, l) => a + l.tax, 0);
+    const issueDate = new Date(now - s.daysAgo * 86_400_000);
+    const created = await prisma.invoice.create({
+      data: {
+        clubId,
+        invoiceNo: `TMP-${Math.random()}`,
+        kind: s.kind,
+        memberId: s.member?.id ?? null,
+        billToName: s.member ? `${s.member.firstName} ${s.member.lastName}` : s.billToName!,
+        billToEmail: s.member?.email ?? s.billToEmail ?? null,
+        billToPhone: s.member?.phone ?? null,
+        billToAddress: s.billToAddress ?? null,
+        billToGstin: s.billToGstin ?? null,
+        issueDate,
+        dueDate: new Date(issueDate.getTime() + s.dueIn * 86_400_000),
+        subtotal,
+        tax,
+        total: subtotal + tax,
+        createdById: userId,
+        items: { create: items },
+      },
+    });
+    const invoiceNo = `INV-${stamp(issueDate)}-${String(created.hashId).padStart(4, "0")}`;
+    if (s.status === "PAID") {
+      const paidAt = new Date(issueDate.getTime() + 2 * 86_400_000);
+      const source: TxSource = s.kind === "MEMBERSHIP" ? "MEMBERSHIP" : "OTHER";
+      const txn = await prisma.transaction.create({ data: { clubId, source, direction: "IN", amount: subtotal + tax, tax, paymentMode: "ONLINE", memberId: s.member?.id ?? null, refType: "Invoice", refId: created.id, description: `Invoice ${invoiceNo} · ${s.member ? `${s.member.firstName} ${s.member.lastName}` : s.billToName}`, byUserId: userId, createdAt: paidAt } });
+      await prisma.invoice.update({ where: { id: created.id }, data: { invoiceNo, status: "PAID", paidAt, paymentMode: "ONLINE", transactionId: txn.id } });
+    } else {
+      await prisma.invoice.update({ where: { id: created.id }, data: { invoiceNo } });
+    }
+  }
+  return specs.length;
+}
+
+async function seedPayables(clubId: string, userId: string) {
+  const count = await prisma.payable.count({ where: { clubId } });
+  if (count > 0) return count;
+  const now = Date.now();
+  const d = (days: number) => new Date(now + days * 86_400_000);
+  await prisma.payable.createMany({
+    data: [
+      { clubId, kind: "SUPPLIER", payee: "Bisleri Distributors", description: "Water & soft drinks · weekly", reference: "BD/2026/0912", amount: 184000, dueDate: d(-2), createdById: userId },
+      { clubId, kind: "SUPPLIER", payee: "Yonex India", description: "Shuttlecocks + grips restock", reference: "YX-44821", amount: 1263000, dueDate: d(4), createdById: userId },
+      { clubId, kind: "SUPPLIER", payee: "Fresh Farm Produce", description: "Kitchen produce · fortnight", reference: "FFP-1107", amount: 421500, dueDate: d(6), createdById: userId },
+      { clubId, kind: "SALARY", payee: "Staff payroll", description: "Salaries · current month", reference: "PAYROLL-OCT", amount: 32500000, dueDate: d(12), createdById: userId },
+      { clubId, kind: "TAX", payee: "GSTN", description: "GSTR-3B · previous month", reference: "GSTR3B-SEP", amount: 2184000, dueDate: d(17), createdById: userId },
+      { clubId, kind: "OTHER", payee: "Adani Electricity", description: "Electricity · floodlights & AC", reference: "AEML-7731", amount: 1875000, dueDate: d(9), createdById: userId },
+    ],
+  });
+  return 6;
+}
+
 async function main() {
   console.log("Seeding Yolla…");
 
@@ -418,6 +595,15 @@ async function main() {
   const owner = users.find((u) => u.role === "OWNER")!;
   await seedLeads(club.id, plans, owner.id);
   console.log(`  leads   ${LEADS.length}`);
+
+  const ledgerRows = await seedLedgerHistory(club.id, club.timezone, courts, members, owner.id);
+  console.log(`  ledger  ${ledgerRows} historical transactions`);
+
+  const invoices = await seedInvoices(club.id, members, owner.id);
+  console.log(`  invoices ${invoices}`);
+
+  const payables = await seedPayables(club.id, owner.id);
+  console.log(`  payables ${payables}`);
 
   await seedActivity(club.id, owner.id);
 
