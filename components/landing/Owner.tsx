@@ -20,7 +20,7 @@ export function Owner() {
     <section className="owner fu" id="owner" aria-labelledby="owner-title">
       <div className="l-container owner-inner">
         <div>
-          <span className="eyebrow">Scene F · Friday, 9 pm</span>
+          <span className="eyebrow">Friday, 9 pm</span>
           <h2 id="owner-title">The owner opens her phone and the week is already added up.</h2>
           <p className="lead">
             Revenue by source and by payment mode. Which court sits empty after 8 pm. Who is about to lapse. No exports, no

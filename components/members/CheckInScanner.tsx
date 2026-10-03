@@ -36,6 +36,9 @@ export function CheckInScanner() {
     let cancelled = false;
     (async () => {
       try {
+        if (!navigator.mediaDevices) {
+          throw new Error("Camera requires HTTPS or localhost.");
+        }
         const { BrowserQRCodeReader } = await import("@zxing/browser");
         const reader = new BrowserQRCodeReader(undefined, { delayBetweenScanAttempts: 250 });
         const controls = await reader.decodeFromVideoDevice(undefined, videoRef.current!, (res) => {
