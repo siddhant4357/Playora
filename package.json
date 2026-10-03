@@ -11,7 +11,7 @@
         "db:seed": "prisma db seed"
     },
     "prisma": {
-        "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+        "seed": "tsx prisma/seed.ts"
     },
     "dependencies": {
         "@base-ui/react": "^1.8.0",
@@ -49,6 +49,7 @@
         "eslint-config-next": "15.5.26",
         "tailwindcss": "^4",
         "ts-node": "^10.9.2",
+        "tsx": "^4.23.15",
         "typescript": "^5"
     }
 }
