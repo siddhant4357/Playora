@@ -6,9 +6,10 @@
 
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, PanelLeftClose } from "lucide-react";
+import { ChevronRight, ChevronDown, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navFor } from "@/lib/nav";
 import { BrandLogo } from "@/components/shared/BrandMark";
@@ -24,6 +25,16 @@ interface SidebarProps {
 export function Sidebar({ userRole, clubName, isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const sections = navFor(userRole);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    return sections.reduce((acc, section) => {
+      acc[section.label] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
+  });
+
+  const toggleSection = (label: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
 
   return (
     <>
@@ -71,16 +82,26 @@ export function Sidebar({ userRole, clubName, isOpen, onToggle }: SidebarProps) 
         <nav className="flex-1 overflow-y-auto px-2 py-3" style={{ scrollbarWidth: "none" }}>
           {sections.map((section) => {
             const visibleItems = section.items;
+            if (visibleItems.length === 0) return null;
+            const isCollapsed = collapsedSections[section.label];
 
             return (
               <div key={section.label} className="mb-4">
-                <p
-                  className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest"
+                <button
+                  onClick={() => toggleSection(section.label)}
+                  className="w-full flex items-center justify-between px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest cursor-pointer hover:opacity-75 transition-opacity"
                   style={{ color: "var(--color-text-subtle)" }}
                 >
-                  {section.label}
-                </p>
-                <div className="space-y-0.5">
+                  <span>{section.label}</span>
+                  {isCollapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+                
+                <div
+                  className={cn(
+                    "space-y-0.5 overflow-hidden transition-all duration-200 ease-in-out",
+                    isCollapsed ? "max-h-0 opacity-0" : "max-h-[500px] opacity-100"
+                  )}
+                >
                   {visibleItems.map((item) => {
                     const active = item.exact
                       ? pathname === item.href

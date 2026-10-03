@@ -155,10 +155,10 @@ export default async function CourtsPage({ searchParams }: { searchParams: Promi
           <p>Your first session is on us. Pick a free slot above or let us pick one for you.</p>
         </div>
         <div className="cta-actions">
-          <Link href="/trial" className="btn btn-inverse btn-lg">
+          <Link href="/trial" className="btn btn-primary btn-lg">
             Book a free trial
           </Link>
-          <Link href="/login?next=/me/book" className="btn btn-ghost btn-lg" style={{ color: "#fff" }}>
+          <Link href="/login?next=/me/book" className="btn btn-outline btn-lg">
             Member? Sign in to book
           </Link>
         </div>

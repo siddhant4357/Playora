@@ -41,7 +41,7 @@ function BookingScene() {
       </div>
 
       <div className="feat-visual">
-        <Image src="/doodle-arrow-v3.jpg" alt="" width={120} height={120} className="doodle" style={{ top: -70, left: -30, transform: "rotate(20deg)" }} />
+        <Image src="/doodle-arrow-v3.jpg" alt="" width={120} height={120} className="doodle" style={{ top: -110, left: -20, transform: "rotate(10deg)" }} />
         <div className="mock" role="img" aria-label="Member booking screen with slot prices and a conflict notice">
           <div className="mock-hd">
             <CalendarCheck size={14} /> Book a court <span className="r">Sat 4 Oct · Badminton · Court 1</span>
@@ -114,7 +114,7 @@ function MemberScene() {
       </div>
 
       <div className="feat-visual">
-        <Image src="/doodle-arrow-v4.jpg" alt="" width={120} height={120} className="doodle" style={{ top: -74, right: -20, transform: "scaleX(-1) rotate(15deg)" }} />
+        <Image src="/doodle-arrow-v4.jpg" alt="" width={120} height={120} className="doodle" style={{ top: -120, right: -40, transform: "scaleX(-1) rotate(25deg)" }} />
         <div className="mock" role="img" aria-label="Member 360 view with QR membership card and activity timeline">
           <div className="mock-hd">
             <Sparkles size={14} /> Member 360 <span className="r">Rahul Sharma · #0142</span>
@@ -185,7 +185,7 @@ function BarShopScene() {
       </div>
 
       <div className="feat-visual">
-        <Image src="/doodle-arrow.jpg" alt="" width={110} height={110} className="doodle" style={{ bottom: -70, left: -10, transform: "rotate(-150deg)" }} />
+        <Image src="/doodle-arrow.jpg" alt="" width={110} height={110} className="doodle" style={{ top: -80, left: -40, transform: "scaleX(-1) rotate(-15deg)" }} />
         <div className="mock" role="img" aria-label="Bar tab for table 4 with member discount and kitchen status">
           <div className="mock-hd">
             <Utensils size={14} /> Table 4 · Tab #218 <span className="r">Rahul Sharma · Gold</span>

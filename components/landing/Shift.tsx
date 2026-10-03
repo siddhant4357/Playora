@@ -57,7 +57,7 @@ export function Cta() {
   return (
     <section className="cta l-container fu" aria-labelledby="cta-title">
       <div className="cta-box">
-        <Image src="/doodle-arrow-v3.jpg" alt="" width={160} height={160} className="doodle" />
+        <Image src="/doodle-arrow-v3.jpg" alt="" width={160} height={160} className="doodle" style={{ top: -80, left: -60, transform: "rotate(-15deg)" }} />
         <h2 id="cta-title">Ready for the Friday rush?</h2>
         <p>Book a trial session as a guest, or sign in if you&apos;re already a member or on staff. Same account, same board.</p>
         <div className="cta-actions">

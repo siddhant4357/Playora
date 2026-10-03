@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/shared/BrandMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -16,6 +19,8 @@ interface NavProps {
 }
 
 export function Nav({ appHref = null }: NavProps) {
+  const pathname = usePathname();
+
   return (
     <header className="ln">
       <div className="l-container ln-inner">
@@ -25,11 +30,14 @@ export function Nav({ appHref = null }: NavProps) {
 
         <nav aria-label="Primary">
           <ul className="ln-links">
-            {links.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href}>{l.label}</Link>
-              </li>
-            ))}
+            {links.map((l) => {
+              const isActive = pathname.startsWith(l.href);
+              return (
+                <li key={l.href}>
+                  <Link href={l.href} className={isActive ? "active" : ""}>{l.label}</Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 

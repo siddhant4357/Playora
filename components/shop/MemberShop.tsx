@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "cn";
+import Image from "next/image";
 import { Bike, CircleDot, Footprints, Minus, Plus, Shirt, ShoppingBag, Store, Tag, Trash2, X, type LucideIcon } from "lucide-react";
 import type { CatalogueItem } from "@/lib/shop/queries";
 import { placeMemberOrderAction } from "@/lib/actions/shop";
@@ -78,8 +79,12 @@ export function MemberShop({ catalogue, discountPct, planName, canOrder }: { cat
           const inCart = cart.find((l) => l.product.id === p.id)?.qty ?? 0;
           return (
             <li key={p.id} className="flex flex-col overflow-hidden rounded-2xl" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)" }}>
-              <div className="flex aspect-[4/3] items-center justify-center" style={{ background: "color-mix(in oklab, var(--color-primary-500) 8%, var(--color-bg))" }} aria-hidden="true">
-                <Glyph className="h-10 w-10 opacity-55" style={{ color: "var(--color-primary-900)" }} />
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden" style={{ background: "color-mix(in oklab, var(--color-primary-500) 8%, var(--color-bg))" }} aria-hidden="true">
+                {p.imageUrl ? (
+                  <Image src={p.imageUrl} alt={p.name} fill sizes="(max-width:640px) 50vw, 33vw" style={{ objectFit: "cover" }} />
+                ) : (
+                  <Glyph className="h-10 w-10 opacity-55" style={{ color: "var(--color-primary-900)" }} />
+                )}
               </div>
               <div className="flex flex-1 flex-col gap-2 p-3">
                 <div className="flex flex-col gap-0.5">

@@ -109,9 +109,9 @@ const MANAGEMENT = (full: boolean): NavSection => ({
   label: "Management",
   items: [
     { label: "HR & payroll", href: "/owner/hr", icon: BriefcaseBusiness },
-    { label: "Reports", href: "/owner/reports", icon: BarChart3 },
     ...(full
       ? [
+          { label: "Reports", href: "/owner/reports", icon: BarChart3 },
           { label: "Ask Playora", href: "/owner/ask", icon: Sparkles },
           { label: "Club settings", href: "/owner/settings", icon: Settings },
           { label: "System health", href: "/admin/health", icon: ShieldCheck },

@@ -40,14 +40,14 @@ export default async function HrPage() {
           { href: "/owner/hr/leave", title: "Leave approvals", hint: `${overview.pendingLeave} pending` },
           { href: "/owner/hr/payroll", title: "Payroll", hint: "Generate, approve, pay, payslips" },
         ].map((c) => (
-          <Link key={c.href} href={c.href} className="flex items-center justify-between gap-3 rounded-lg border p-4 transition-colors hover:bg-[var(--color-surface-2)]" style={{ borderColor: "var(--color-border)" }}>
+          <Link key={c.href} href={c.href} className="flex items-center justify-between gap-3 rounded-2xl p-4 transition-colors hover:scale-[1.01]" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
             <div className="flex flex-col">
-              <span className="text-sm font-semibold">{c.title}</span>
-              <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+              <span className="text-sm font-semibold text-[var(--color-text)]">{c.title}</span>
+              <span className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>
                 {c.hint}
               </span>
             </div>
-            <ArrowRight className="h-4 w-4 shrink-0" style={{ color: "var(--color-text-muted)" }} />
+            <ArrowRight className="h-4 w-4 shrink-0 opacity-50" style={{ color: "var(--color-text-muted)" }} />
           </Link>
         ))}
       </div>

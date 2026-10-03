@@ -1,4 +1,4 @@
-import { generateText, Output } from "ai";
+
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 
@@ -72,8 +72,15 @@ export function guardSql(sql: string, clubId: string): string {
   if (FORBIDDEN.test(cleaned)) throw new AskError("Query uses a forbidden keyword.", "UNSAFE");
   if (!cleaned.includes(clubId)) throw new AskError("Query must be scoped to this club.", "UNSAFE");
 
+  // Extract CTE alias names so they aren't treated as real tables
+  const cteNames = new Set(
+    [...cleaned.matchAll(/\bwith\b[\s\S]*?(\w+)\s+as\s*\(/gi)].map((m) => m[1].toLowerCase())
+  );
+
   const tables = [...cleaned.matchAll(/\b(?:from|join)\s+"?([a-z_]+)"?/gi)].map((m) => m[1].toLowerCase());
-  const bad = tables.filter((t) => !ALLOWED_TABLES.includes(t) && !/^[a-z]$|^[a-z]{1,3}\d?$/.test(t));
+  const bad = tables.filter(
+    (t) => !ALLOWED_TABLES.includes(t) && !cteNames.has(t) && !/^[a-z]$|^[a-z]{1,3}\d?$/.test(t)
+  );
   if (bad.length) throw new AskError(`Table not allowed: ${bad.join(", ")}`, "UNSAFE");
 
   return /\blimit\s+\d+/i.test(cleaned) ? cleaned : `${cleaned}\nLIMIT 200`;
@@ -153,8 +160,8 @@ function cannedPlan(clubId: string, question: string, tz: string): Plan | null {
   return hit ? hit.plan(clubId, tz) : null;
 }
 
-function isGatewayDisabled(e: unknown) {
-  return /credit card|customer_verification|AI_GATEWAY|Unauthorized|401/i.test(e instanceof Error ? e.message : String(e));
+function isGroqMissingOrInvalid(e: unknown) {
+  return /GROQ_API_KEY is not set|Unauthorized|401/i.test(e instanceof Error ? e.message : String(e));
 }
 
 export async function ask(clubId: string, question: string, timezone: string): Promise<AskResult> {
@@ -162,29 +169,59 @@ export async function ask(clubId: string, question: string, timezone: string): P
   let plan: Plan;
   let viaFallback = false;
   try {
-    const { output } = await generateText({
-      model: ASK_MODEL,
-      output: Output.object({ schema: planSchema }),
-      system: [
-        "You are the analytics engine for a sports club management system (Postgres).",
-        `Club id: '${clubId}'. Club timezone: ${timezone}. Today is ${new Date().toISOString().slice(0, 10)}.`,
-        "Write exactly one SELECT. Every table you touch must be filtered with \"clubId\" = the club id literal.",
-        "Quote camelCase identifiers with double quotes. Use timezone-aware date math: (\"createdAt\" AT TIME ZONE 'UTC' AT TIME ZONE '" + timezone + "')::date.",
-        "Revenue = transactions with direction = 'IN'. Net = IN minus OUT. Prefer the transactions table for any money question.",
-        "Never divide paise by 100; the UI formats money. Keep result sets small (aggregate, LIMIT 200).",
-        "Schema:",
-        CATALOGUE,
-      ].join("\n"),
-      prompt: question,
+    if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is not set. Get one for free at console.groq.com");
+
+    const systemPrompt = [
+      "You are the analytics engine for a sports club management system (Postgres).",
+      `Club id: '${clubId}'. Club timezone: ${timezone}. Today is ${new Date().toISOString().slice(0, 10)}.`,
+      "Write exactly one SELECT. Every table you touch must be filtered with \"clubId\" = the club id literal.",
+      "Quote camelCase identifiers with double quotes. Use timezone-aware date math: (\"createdAt\" AT TIME ZONE 'UTC' AT TIME ZONE '" + timezone + "')::date.",
+      "Revenue = transactions with direction = 'IN'. Net = IN minus OUT. Prefer the transactions table for any money question.",
+      "Never divide paise by 100; the UI formats money. Keep result sets small (aggregate, LIMIT 200).",
+      "Schema:",
+      CATALOGUE,
+      "You MUST return ONLY valid JSON matching this exact schema:",
+      `{
+  "sql": "string (One PostgreSQL SELECT. Must filter every table on clubId = the given club id literal. Money columns are integer paise. Alias output columns with short snake_case names.)",
+  "chart": {
+    "kind": "bar" | "line" | "none",
+    "x": "string (alias of the category/time column)",
+    "y": "string (alias of the numeric column)",
+    "yIsPaise": true|false
+  },
+  "summaryTemplate": "string (One sentence answering the question in plain English, using {{row_count}} and {{first.<alias>}} placeholders where useful.)"
+}`
+    ].join("\n");
+
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: "qwen/qwen3.8-27b",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: question }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0,
+      }),
     });
-    if (!output) throw new AskError("The model returned no plan.", "MODEL");
-    plan = output;
+
+    if (!res.ok) {
+      throw new Error(`Groq API error: ${await res.text()}`);
+    }
+
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new AskError("The model returned no plan.", "MODEL");
+    
+    plan = planSchema.parse(JSON.parse(content));
   } catch (e) {
     if (e instanceof AskError) throw e;
-    const canned = isGatewayDisabled(e) ? cannedPlan(clubId, question, timezone) : null;
+    const canned = isGroqMissingOrInvalid(e) ? cannedPlan(clubId, question, timezone) : null;
     if (!canned) {
       const msg = e instanceof Error ? e.message : String(e);
-      throw new AskError(isGatewayDisabled(e) ? "AI Gateway is not enabled for this Vercel team yet (add a card at vercel.com → AI). The suggested questions still work offline." : msg, "MODEL");
+      throw new AskError(isGroqMissingOrInvalid(e) ? "Groq API key is missing or invalid. Add GROQ_API_KEY to your .env file." : msg, "MODEL");
     }
     plan = canned;
     viaFallback = true;

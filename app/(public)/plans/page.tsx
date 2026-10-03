@@ -47,7 +47,6 @@ export default async function PlansPage() {
             p.barDiscountPct > 0 ? `${p.barDiscountPct}% off at the bar & café` : null,
             p.shopDiscountPct > 0 ? `${p.shopDiscountPct}% off in the pro shop` : null,
             p.guestPassesPerMonth > 0 ? `${p.guestPassesPerMonth} guest pass${p.guestPassesPerMonth === 1 ? "" : "es"} a month` : null,
-            ...p.benefits,
           ].filter((x): x is string => Boolean(x));
 
           return (

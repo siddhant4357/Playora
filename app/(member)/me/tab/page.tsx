@@ -35,7 +35,7 @@ export default async function MemberTabPage() {
             Bar &amp; cafeteria orders on your member account.
           </p>
         </div>
-        <Button size="sm" variant="outline" render={<Link href="/me/profile" />} nativeButton={false}>
+        <Button size="sm" variant="outline" render={<Link href="/me" />} nativeButton={false}>
           <QrCode className="h-4 w-4" />
           Member QR
         </Button>

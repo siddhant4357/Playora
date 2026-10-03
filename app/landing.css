@@ -277,7 +277,8 @@ html.dark .doodle {
   transition: background 0.15s, color 0.15s;
 }
 
-.ln-links a:hover {
+.ln-links a:hover,
+.ln-links a.active {
   background: var(--surface);
   color: var(--ink);
 }

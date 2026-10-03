@@ -3,7 +3,7 @@ import Image from "next/image";
 import { cn } from "cn";
 
 export const BRAND_NAME = "Playora";
-export const BRAND_LOGO = "/playora-logo.jpeg";
+export const BRAND_LOGO = "/playora-logo-transparent.png";
 
 /**
  * Playora wordmark. The source artwork sits on a white background, so it is

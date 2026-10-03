@@ -37,24 +37,41 @@ export default async function ReportsPage() {
       <div className="grid gap-4 lg:grid-cols-5">
         <Panel className="lg:col-span-3" title="Detailed reports">
           <ul className="grid gap-2 sm:grid-cols-2">
-            {REPORTS.map((r) => (
-              <li key={r.href}>
-                <Link href={r.href} className="group flex h-full flex-col gap-2 rounded-xl p-3 transition-colors" style={{ background: "var(--color-bg)" }}>
-                  <span className="flex items-center justify-between">
-                    <r.icon className="h-5 w-5" style={{ color: "var(--color-primary-500)" }} aria-hidden />
-                    <ArrowRight className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" style={{ color: "var(--color-text-muted)" }} aria-hidden />
-                  </span>
-                  <span className="font-semibold">{r.title}</span>
-                  <span className="text-xs text-pretty" style={{ color: "var(--color-text-muted)" }}>
-                    {r.desc}
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {REPORTS.map((r) => {
+              const isOwner = user.role === "OWNER";
+              return (
+                <li key={r.href}>
+                  {isOwner ? (
+                    <Link href={r.href} className="group flex h-full flex-col gap-2 rounded-xl p-3 transition-colors hover:bg-black/5 dark:hover:bg-white/5" style={{ background: "var(--color-bg)" }}>
+                      <span className="flex items-center justify-between">
+                        <r.icon className="h-5 w-5" style={{ color: "var(--color-primary-500)" }} aria-hidden />
+                        <ArrowRight className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" style={{ color: "var(--color-text-muted)" }} aria-hidden />
+                      </span>
+                      <span className="font-semibold">{r.title}</span>
+                      <span className="text-xs text-pretty" style={{ color: "var(--color-text-muted)" }}>
+                        {r.desc}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex h-full flex-col gap-2 rounded-xl p-3 opacity-50 cursor-not-allowed" style={{ background: "var(--color-bg)" }}>
+                      <span className="flex items-center justify-between">
+                        <r.icon className="h-5 w-5" style={{ color: "var(--color-text-muted)" }} aria-hidden />
+                      </span>
+                      <span className="font-semibold text-[var(--color-text-muted)]">{r.title} (Owner only)</span>
+                      <span className="text-xs text-pretty" style={{ color: "var(--color-text-muted)" }}>
+                        {r.desc}
+                      </span>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
-          <Link href="/owner/finance/export?period=month" prefetch={false} className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--color-accent-600)" }}>
-            <Download className="h-3.5 w-3.5" /> Download this month&apos;s ledger as CSV
-          </Link>
+          {user.role === "OWNER" && (
+            <Link href="/owner/finance/export?period=month" prefetch={false} className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--color-accent-600)" }}>
+              <Download className="h-3.5 w-3.5" /> Download this month&apos;s ledger as CSV
+            </Link>
+          )}
         </Panel>
 
         <Panel className="lg:col-span-2" title="Share with your accountant">
