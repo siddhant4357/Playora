@@ -24,7 +24,7 @@
 
 | Route | Description | Status |
 |---|---|---|
-| `/` | Landing page — hero, features, value props, footer | ✅ Done (design only, placeholder content) |
+| `/` | Landing page — CourtOS hero (live court grid), free-this-week strip, scenes A/B/C/D/F, plans, modules, owner band, CTA | ✅ Done — `components/landing/*`, `app/landing.css` (static showcase data until Phase 1.8) |
 | `/login` | Login form with validation | ✅ Done |
 | `/register` | Registration form | ✅ Done |
 | `/forgot-password` | Request password reset via email | ✅ Done |
@@ -72,7 +72,7 @@ model PasswordResetToken { ... } // for forgot-password flow
 ### ⚠️ Key Differences from Target Schema (Section 5)
 - The target schema uses `clubId` (multi-tenant) — not yet added. Add it when building club-specific features.
 - The target schema has `OWNER | MANAGER | FRONT_DESK | BAR_STAFF | KITCHEN | COACH | MEMBER` roles — currently only `ADMIN | MEMBER` exist. Extend the `Role` enum as each module is built.
-- The landing page (`/`) has placeholder design content — copy/text is not final.
+- The landing page (`/`) copy is final; its court grid and "Free this week" strip read static data from `components/landing/data.ts` until the booking engine exists (Phase 1.8 in `docs/IMPLEMENTATION_PLAN.md`).
 
 ---
 

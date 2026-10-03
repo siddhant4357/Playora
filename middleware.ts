@@ -7,6 +7,7 @@
  *  - /dashboard/** → requires a valid session (any role)
  *  - /admin/**     → requires a valid session with role === "ADMIN"
  *  - /login, /register → redirect to /dashboard if already logged in
+ *  - /               → always public (signed-in members can browse the site)
  *  - Everything else passes through
  *
  * We use jose for JWT verification here because Next.js middleware
@@ -41,10 +42,9 @@ export async function middleware(request: NextRequest) {
   const session = await getSession(request);
 
   // ── Redirect authenticated users away from auth pages ──────────────────
-  if (
-    session &&
-    (pathname === "/login" || pathname === "/register" || pathname === "/")
-  ) {
+  // The public site (/) stays reachable when signed in: a member should be
+  // able to browse courts and plans without being bounced to the dashboard.
+  if (session && (pathname === "/login" || pathname === "/register")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

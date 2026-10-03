@@ -12,12 +12,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "LDXODOO — Hackathon Platform",
-    template: "%s | LDXODOO",
+    default: "CourtOS — The Champions Club",
+    template: "%s | CourtOS",
   },
   description:
-    "Odoo-themed hackathon platform built with Next.js 15, Prisma, and shadcn/ui.",
-  keywords: ["hackathon", "odoo", "nextjs", "platform"],
+    "Sports club management for The Champions Club: court bookings, memberships, bar and shop POS, and owner reporting on one ledger.",
+  keywords: ["sports club", "court booking", "membership", "club management", "CourtOS"],
 };
 
 export default function RootLayout({
