@@ -21,10 +21,11 @@ export function Footer() {
           <div>
             <h4>The club</h4>
             <ul>
-              <li><a href="#courts">Courts &amp; availability</a></li>
-              <li><a href="#plans">Membership plans</a></li>
-              <li><a href="#bar">Bar &amp; shop</a></li>
-              <li><Link href="/register">Book a trial</Link></li>
+              <li><Link href="/courts">Courts &amp; availability</Link></li>
+              <li><Link href="/plans">Membership plans</Link></li>
+              <li><Link href="/shop">Pro shop</Link></li>
+              <li><Link href="/trial">Book a free trial</Link></li>
+              <li><Link href="/contact">Contact us</Link></li>
             </ul>
           </div>
           <div>

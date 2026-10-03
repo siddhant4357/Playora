@@ -12,6 +12,8 @@ import { Footer } from "@/components/landing/Footer";
 import { Reveal } from "@/components/landing/Reveal";
 import { getCurrentUser } from "@/lib/auth";
 import { homeFor } from "@/lib/roles";
+import { getDefaultClub } from "@/lib/club";
+import { getFreeThisWeek } from "@/lib/leads/queries";
 
 export const metadata: Metadata = {
   title: "Yolla — The Champions Club",
@@ -20,13 +22,14 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const user = await getCurrentUser();
+  const [user, club] = await Promise.all([getCurrentUser(), getDefaultClub()]);
+  const slots = club ? await getFreeThisWeek(club.id, { days: 7, perDay: 2 }).catch(() => []) : [];
   return (
     <div className="landing">
       <Nav appHref={user ? homeFor(user.role) : null} />
       <main>
         <Hero />
-        <LiveStrip />
+        <LiveStrip slots={slots.slice(0, 10)} />
         <Scenes />
         <Plans />
         <Modules />

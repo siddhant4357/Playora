@@ -125,7 +125,11 @@ export async function book(input: BookInput): Promise<BookResult> {
   }
 
   // ── Price ────────────────────────────────────────────────────────────
-  const price = quote(court.pricing, member?.plan, startsAt, tz);
+  const listQuote = quote(court.pricing, member?.plan, startsAt, tz);
+  const price =
+    kind === "TRIAL"
+      ? { ...listQuote, discountPct: 100, priceCharged: 0, reason: "Trial session — on the house" }
+      : listQuote;
   const paymentMode: PaymentMode =
     input.paymentMode ?? (price.priceCharged === 0 ? "COMPLIMENTARY" : member ? "CREDIT" : "CASH");
 

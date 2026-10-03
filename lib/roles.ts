@@ -74,6 +74,7 @@ const ACCESS: Record<string, readonly Role[]> = {
   "/owner/reports": ["MANAGER", "OWNER"],
   "/admin": ["OWNER"],
   "/display": ["FRONT_DESK", "MANAGER", "OWNER"],
+  "/print": ["FRONT_DESK", "MANAGER", "OWNER"],
   "/account": [...ROLES],
 };
 

@@ -40,12 +40,12 @@ export function Hero() {
           Built for The Champions Club&apos;s Friday rush, ready for any club.
         </p>
         <div className="lh-actions">
-          <Link href="/register" className="btn btn-primary btn-lg">
+          <Link href="/trial" className="btn btn-primary btn-lg">
             Book a trial session
           </Link>
-          <a href="#courts" className="btn btn-outline btn-lg">
+          <Link href="/courts" className="btn btn-outline btn-lg">
             See what&apos;s free this week
-          </a>
+          </Link>
         </div>
         <p className="lh-micro">
           Members, staff and the owner all sign in with one account. <Link href="/login">Staff sign in</Link>

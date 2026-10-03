@@ -3,11 +3,11 @@ import { Trophy } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const links = [
-  { href: "#courts", label: "Courts" },
-  { href: "#members", label: "Members" },
-  { href: "#plans", label: "Plans" },
-  { href: "#modules", label: "Modules" },
-  { href: "#owner", label: "For owners" },
+  { href: "/courts", label: "Courts" },
+  { href: "/plans", label: "Plans" },
+  { href: "/shop", label: "Shop" },
+  { href: "/trial", label: "Free trial" },
+  { href: "/contact", label: "Contact" },
 ];
 
 interface NavProps {
@@ -31,7 +31,7 @@ export function Nav({ appHref = null }: NavProps) {
           <ul className="ln-links">
             {links.map((l) => (
               <li key={l.href}>
-                <a href={l.href}>{l.label}</a>
+                <Link href={l.href}>{l.label}</Link>
               </li>
             ))}
           </ul>

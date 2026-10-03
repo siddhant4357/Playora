@@ -1,0 +1,601 @@
+/* Public website pages (/courts, /plans, /shop, /trial, /contact).
+   Scoped under .landing so they share the landing's tokens and resets. */
+
+.landing .pub-main {
+  min-height: 60vh;
+  padding-block: 40px 80px;
+}
+
+.landing .pub-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 720px;
+  margin-bottom: 36px;
+}
+
+.landing .pub-head h1 {
+  font-size: clamp(2rem, 4.2vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.landing .pub-head p {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.landing .pub-crumbs {
+  font-size: 12.5px;
+  color: var(--muted);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.landing .pub-crumbs a:hover {
+  color: var(--plum);
+}
+
+/* Two-column page: content + sticky side panel */
+.landing .pub-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .landing .pub-split {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+  .landing .pub-side {
+    position: sticky;
+    top: 88px;
+  }
+}
+
+.landing .pub-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.landing .pub-card h2,
+.landing .pub-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* Day chips */
+.landing .pub-days {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+
+.landing .pub-day {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--body);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.landing .pub-day b {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.landing .pub-day:hover {
+  border-color: var(--plum);
+}
+
+.landing .pub-day[aria-current="date"] {
+  background: var(--plum);
+  border-color: var(--plum);
+  color: #fff;
+}
+
+.landing .pub-day[aria-current="date"] b {
+  color: #fff;
+}
+
+/* Public availability grid */
+.landing .pub-grid {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.landing .pub-grid table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+
+.landing .pub-grid th,
+.landing .pub-grid td {
+  padding: 6px;
+  text-align: center;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.landing .pub-grid thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+}
+
+.landing .pub-grid tbody th {
+  position: sticky;
+  left: 0;
+  background: var(--card);
+  text-align: left;
+  padding-inline: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  border-right: 1px solid var(--line);
+  min-width: 120px;
+}
+
+.landing .pub-grid tbody th small {
+  display: block;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.landing .slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 40px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 11.5px;
+  line-height: 1.1;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.landing .slot small {
+  font-weight: 500;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.landing .slot-free {
+  background: var(--mint-soft);
+  color: #146b5e;
+  border-color: color-mix(in srgb, var(--mint) 40%, transparent);
+}
+
+html.dark .landing .slot-free {
+  color: #7fe0cc;
+}
+
+.landing .slot-free:hover {
+  background: var(--mint);
+  color: #06302a;
+}
+
+.landing .slot-busy {
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.landing .slot-past {
+  background: transparent;
+  color: var(--line);
+  border-color: var(--line);
+}
+
+.landing .slot-social {
+  background: var(--plum-soft);
+  color: var(--plum);
+}
+
+.landing .pub-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+.landing .pub-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  vertical-align: -1px;
+  margin-right: 6px;
+}
+
+/* Court cards */
+.landing .pub-courts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.landing .court-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.landing .court-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.landing .court-card .meta {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.landing .court-card .bands {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  border-top: 1px dashed var(--line);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.landing .court-card .bands span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.landing .court-card .bands b {
+  color: var(--ink);
+}
+
+/* Forms */
+.landing .pub-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.landing .pub-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.landing .pub-form input,
+.landing .pub-form select,
+.landing .pub-form textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  width: 100%;
+}
+
+.landing .pub-form input:focus,
+.landing .pub-form select:focus,
+.landing .pub-form textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--plum) 45%, transparent);
+  outline-offset: 1px;
+  border-color: var(--plum);
+}
+
+.landing .pub-form .row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .landing .pub-form .row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.landing .pub-form .hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.landing .pub-error {
+  background: color-mix(in srgb, var(--coral) 14%, transparent);
+  color: #9b3b3b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+html.dark .landing .pub-error {
+  color: #ffb3b3;
+}
+
+/* Slot picker inside trial form */
+.landing .pick-days {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.landing .pick-day {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--body);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.landing .pick-day[aria-pressed="true"] {
+  background: var(--plum);
+  border-color: var(--plum);
+  color: #fff;
+}
+
+.landing .pick-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+}
+
+.landing .pick-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.landing .pick-slot b {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.landing .pick-slot:hover {
+  border-color: var(--mint);
+}
+
+.landing .pick-slot[aria-pressed="true"] {
+  border-color: var(--mint);
+  background: var(--mint-soft);
+}
+
+/* Success panel */
+.landing .pub-done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 28px;
+  border-radius: 16px;
+  background: var(--mint-soft);
+  color: var(--ink);
+}
+
+.landing .pub-done h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.landing .pub-done .big {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Shop */
+.landing .shop-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.landing .shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.landing .prod {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing .prod .img {
+  aspect-ratio: 4 / 3;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--plum);
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+}
+
+.landing .prod .img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.landing .prod .bd {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.landing .prod .bd h3 {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.landing .prod .bd h3 a:hover {
+  color: var(--plum);
+}
+
+.landing .prod .cat {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.landing .prod .ft {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.landing .prod .ft b {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.landing .prod .ft .btn {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.landing .prod .oos {
+  font-size: 12px;
+  color: var(--coral);
+  font-weight: 600;
+}
+
+.landing .bag-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.landing .bag-line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.landing .bag-line .qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.landing .bag-line .qty button {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.landing .bag-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: var(--ink);
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.landing .pub-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.landing .seg-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px;
+  background: var(--surface);
+}
+
+.landing .seg-toggle button {
+  border: 0;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--body);
+  cursor: pointer;
+}
+
+.landing .seg-toggle button[aria-pressed="true"] {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
