@@ -570,7 +570,7 @@ async function seedPayables(clubId: string, userId: string) {
   return 6;
 }
 
-// ───────────────────────── HR (employees, rota, attendance, leave) ─────────────────────────
+// ───────────────────────── HR (employees, rota, attendance, leave) ────────────��────────────
 
 const STAFF_PROFILES: Record<string, { designation: string; department: string; employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"; salary: number; hourlyRate?: number }> = {
   OWNER: { designation: "Owner", department: "Management", employmentType: "FULL_TIME", salary: 0 },
@@ -675,6 +675,89 @@ async function seedHr(clubId: string, tz: string, users: { id: string; role: Rol
   return employees.length;
 }
 
+const COACH_NOTES = [
+  "Backhand slice is landing deep now; next session work on the approach shot.",
+  "Serve toss drifting left under fatigue. Added shadow-swing drill for homework.",
+  "Great footwork on the padel back wall today. Ready for doubles positioning next.",
+  "Struggled with high volleys. Keep the racket head up; 3x10 reps at the net.",
+  "First session after the ankle knock. Light rally only, no sprint drills.",
+  "Consistent on the forehand cross-court; introduced the inside-out pattern.",
+];
+
+/**
+ * Coaching schedule for the demo coach: two private lessons per weekday
+ * (07:00 and 17:00), two weeks back (COMPLETED) and one week ahead
+ * (CONFIRMED). Idempotent: skips when any coached session already exists.
+ */
+async function seedCoaching(clubId: string, tz: string, coachId: string, courts: { id: string; name: string }[], members: { id: string }[]) {
+  const existing = await prisma.booking.count({ where: { clubId, coachId } });
+  if (existing > 0) return { sessions: 0, notes: 0 };
+
+  const now = new Date();
+  const roster = members.slice(0, 6);
+  const hours = [7, 17];
+  const court = courts[0];
+  let sessions = 0;
+
+  for (let d = -14; d <= 7; d++) {
+    const day = new Date(now.getTime() + d * 86_400_000);
+    const local = toLocalParts(day, tz);
+    if ([0, 6].includes(local.weekday)) continue;
+
+    for (const hour of hours) {
+      const startsAt = localToUtc(tz, local.year, local.month, local.day, hour);
+      const endsAt = new Date(startsAt.getTime() + 3_600_000);
+      if (startsAt.getTime() < now.getTime() - 86_400_000 * 14) continue;
+
+      const clash = await prisma.booking.findFirst({
+        where: { courtId: court.id, status: { in: ["CONFIRMED", "COMPLETED"] }, startsAt: { lt: endsAt }, endsAt: { gt: startsAt } },
+        select: { id: true },
+      });
+      if (clash) continue;
+
+      const past = endsAt.getTime() < now.getTime();
+      const player = roster[(sessions + (hour === 17 ? 3 : 0)) % roster.length];
+      await prisma.booking.create({
+        data: {
+          clubId,
+          courtId: court.id,
+          memberId: player.id,
+          coachId,
+          startsAt,
+          endsAt,
+          kind: "COACHING",
+          status: past ? "COMPLETED" : "CONFIRMED",
+          source: "FRONT_DESK",
+          listPrice: 150000,
+          priceCharged: 150000,
+          priceReason: "Coaching package",
+          checkedInAt: past ? startsAt : null,
+          createdById: coachId,
+          createdAt: new Date(startsAt.getTime() - 3 * 86_400_000),
+        },
+      });
+      sessions++;
+    }
+  }
+
+  const completed = await prisma.booking.findMany({
+    where: { clubId, coachId, status: "COMPLETED", memberId: { not: null } },
+    orderBy: { startsAt: "desc" },
+    take: COACH_NOTES.length,
+    select: { memberId: true, startsAt: true },
+  });
+  await prisma.memberNote.createMany({
+    data: completed.map((b, i) => ({
+      memberId: b.memberId!,
+      content: COACH_NOTES[i % COACH_NOTES.length],
+      byUserId: coachId,
+      createdAt: new Date(b.startsAt.getTime() + 3_600_000),
+    })),
+  });
+
+  return { sessions, notes: completed.length };
+}
+
 async function main() {
   console.log("Seeding Playora…");
 
@@ -719,6 +802,10 @@ async function main() {
 
   const employees = await seedHr(club.id, club.timezone, users);
   console.log(`  employees ${employees} (+ rota, attendance, leave)`);
+
+  const coach = users.find((u) => u.role === "COACH")!;
+  const coaching = await seedCoaching(club.id, club.timezone, coach.id, courts, members);
+  console.log(`  coaching ${coaching.sessions} sessions, ${coaching.notes} player notes`);
 
   await seedActivity(club.id, owner.id);
 
