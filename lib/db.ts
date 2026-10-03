@@ -5,6 +5,9 @@
  * In Next.js dev mode, hot-reload would create a new PrismaClient on every
  * module reload, exhausting the database connection pool. We store the
  * instance on `globalThis` in development to reuse it across reloads.
+ *
+ * Prisma v7 requires a driver adapter — @prisma/adapter-pg works with both
+ * local PostgreSQL and Prisma Postgres cloud (just change DATABASE_URL).
  */
 
 import { PrismaClient } from "../generated/prisma/client";
