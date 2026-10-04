@@ -4,10 +4,6 @@
 
 <h1 align="center">Playora — Sports Club Management Platform</h1>
 
-<p align="center">
-  One kernel, seven roles, every rupee in one screen.
-</p>
-
 ---
 
 Playora is a full-stack ERP built exclusively for sports clubs — court booking, memberships, a bar & cafeteria POS with a live kitchen display, pro shop, complete finance (invoices, payables, GST), HR (rota, attendance, leave, payroll), and a plain-English analytics console for the owner.
