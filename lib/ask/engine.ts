@@ -72,12 +72,18 @@ export function guardSql(sql: string, clubId: string): string {
   if (FORBIDDEN.test(cleaned)) throw new AskError("Query uses a forbidden keyword.", "UNSAFE");
   if (!cleaned.includes(clubId)) throw new AskError("Query must be scoped to this club.", "UNSAFE");
 
-  // Extract CTE alias names so they aren't treated as real tables
-  const cteNames = new Set(
-    [...cleaned.matchAll(/\bwith\b[\s\S]*?(\w+)\s+as\s*\(/gi)].map((m) => m[1].toLowerCase())
-  );
+  // Collect safe virtual names:
+  // 1. All CTE names:  WITH name AS (, second_name AS (, ...
+  const cteNames = new Set<string>();
+  for (const m of cleaned.matchAll(/\b(\w+)\s+as\s*\(/gi)) {
+    cteNames.add(m[1].toLowerCase());
+  }
+  // 2. Subquery / derived table aliases: ) AS alias  or  ) alias
+  for (const m of cleaned.matchAll(/\)\s+(?:as\s+)?"?(\w+)"?/gi)) {
+    cteNames.add(m[1].toLowerCase());
+  }
 
-  const tables = [...cleaned.matchAll(/\b(?:from|join)\s+"?([a-z_]+)"?/gi)].map((m) => m[1].toLowerCase());
+  const tables = [...cleaned.matchAll(/\b(?:from|join)\s+"?([a-z_][a-z0-9_]*)"?/gi)].map((m) => m[1].toLowerCase());
   const bad = tables.filter(
     (t) => !ALLOWED_TABLES.includes(t) && !cteNames.has(t) && !/^[a-z]$|^[a-z]{1,3}\d?$/.test(t)
   );

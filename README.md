@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img src="./public/playora-logo-transparent.png" alt="Playora" width="160" />
 </p>
 
@@ -235,26 +235,6 @@ npm run dev                  # Start on http://localhost:3000
 | 🎾 **Coach** | `coach@champions.club` | `/coach` | Schedule, session management |
 | 👤 **Member** | `member@champions.club` | `/me` | Book courts, shop online, view tab & orders |
 
----
-
-## 🗄️ Seed Data
-
-What is in the database after `npx prisma db seed`:
-
-| Data | Count |
-|---|---|
-| Club | 1 (The Champions Club) |
-| Users (demo accounts) | 7 (one per role) |
-| Membership Plans | 3 (Gold ₹9,999/mo · Silver ₹2,500/mo · Junior ₹1,200/mo) |
-| Courts | 6 (4 Tennis · 2 Padel) with peak/off-peak/weekend pricing |
-| Members | 10 (mix of Gold/Silver/Junior/Trial/Lead) |
-| Products | 28 (rackets, shoes, apparel, accessories, beverages, food) |
-| Bar Tables | 9 |
-| Leads | 6 (in various Kanban stages) |
-| Ledger history | ~2,159 historical transactions |
-| Invoices | 4 |
-| Payables | 6 |
-| Employees | 5 (with rota, attendance, leave records) |
 
 ---
 
